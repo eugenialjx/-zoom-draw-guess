@@ -465,5 +465,32 @@ function addWords(){
 }
 updateTimer();
 </script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+  import { getDatabase } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-database.js";
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDmzAJsH2bUXRtO35ictTMkzL2GgkfcfNc",
+    authDomain: "zoom-draw-guess.firebaseapp.com",
+    databaseURL: "https://zoom-draw-guess-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "zoom-draw-guess",
+    storageBucket: "zoom-draw-guess.firebasestorage.app",
+    messagingSenderId: "24892001851",
+    appId: "1:24892001851:web:07d73bb1a50515d134961e"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const database = getDatabase(app);
+  const auth = getAuth(app);
+
+  signInAnonymously(auth)
+    .then(() => {
+      console.log("Firebase connected successfully!");
+    })
+    .catch((error) => {
+      console.error("Firebase authentication error:", error);
+    });
+</script>
 </body>
 </html>
