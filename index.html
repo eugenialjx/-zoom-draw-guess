@@ -5,6 +5,76 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Draw & Guess</title>
+/* LOBBY SCREEN */
+.lobby-screen {
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  background:#f7f6fb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.lobby-card {
+  background:white;
+  border:1px solid #eeedf3;
+  border-radius:20px;
+  padding:32px;
+  width:100%;
+  max-width:430px;
+  box-shadow:0 12px 40px rgba(40,35,80,.07);
+}
+.lobby-card h1 {font-size:25px;margin:0 0 8px}
+.lobby-card p {font-size:13px;color:#9694a8;line-height:1.6}
+.lobby-card label {
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  color:#9694a8;
+  margin:18px 0 7px;
+}
+.lobby-card input {
+  width:100%;
+  padding:13px;
+  border:1px solid #eeedf3;
+  border-radius:10px;
+  outline:none;
+  font-size:14px;
+}
+.lobby-card input:focus {border-color:#7868e8}
+.lobby-btn {
+  width:100%;
+  border:0;
+  background:#7868e8;
+  color:white;
+  padding:13px;
+  border-radius:10px;
+  font-weight:700;
+  margin-top:12px;
+}
+.lobby-btn:hover {background:#6252cf}
+.lobby-divider {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:#aaa7b8;
+  font-size:11px;
+  margin:22px 0;
+}
+.lobby-divider:before,.lobby-divider:after {
+  content:"";
+  flex:1;
+  height:1px;
+  background:#eeedf3;
+}
+.lobby-status {
+  font-size:12px;
+  color:#7868e8;
+  margin-top:14px;
+  min-height:18px;
+  overflow-wrap:anywhere;
+}
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
 
@@ -202,6 +272,32 @@ input[type=range] {width:75px;accent-color:var(--purple)}
 </head>
 <body>
 
+<div id="lobby" class="lobby-screen">
+  <div class="lobby-card">
+    <div style="font-size:35px;margin-bottom:15px">🎨</div>
+    <h1>Ready to play?</h1>
+    <p>Enter your name and create a room or join your friends.</p>
+
+    <label for="playerName">YOUR DISPLAY NAME</label>
+    <input id="playerName" placeholder="e.g. Alex" maxlength="20">
+
+    <button class="lobby-btn" onclick="createRoom()">
+      + Create a room
+    </button>
+
+    <div class="lobby-divider">OR JOIN YOUR FRIENDS</div>
+
+    <label for="roomCodeInput">ROOM CODE</label>
+    <input id="roomCodeInput" placeholder="Enter 6-character code"
+      maxlength="6" style="text-transform:uppercase">
+
+    <button class="lobby-btn" onclick="joinRoom()">
+      Join room →
+    </button>
+
+    <div id="lobbyStatus" class="lobby-status"></div>
+  </div>
+</div>
 <header class="topbar">
   <div class="brand">
     <div class="logo">🎨</div>
