@@ -186,15 +186,14 @@ canvas{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}
 </div>
 <div id="toast"></div>
 
-
-<script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
 import {
  getAuth,signInAnonymously,onAuthStateChanged,
  setPersistence,browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 import {
- getDatabase,ref,set,get,update,push,onValue,runTransaction
+ getDatabase,ref,set,get,update,push,onValue,
+ runTransaction,onDisconnect
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-database.js";
 
 const firebaseConfig={
@@ -212,12 +211,13 @@ const auth=getAuth(app);
 const db=getDatabase(app);
 const $=id=>document.getElementById(id);
 
-let uid=null,roomCode=null,isHost=false,players={},roomData={};
+let uid=null,roomCode=null,isHost=false;
+let players={},presence={},roomData={};
 let round={},secretWord="",isDrawer=false,drawingEnabled=false;
 let strokes=[],liveStroke=null,drawing=false,activePoints=[];
 let tool="pen",processed=new Set(),timerInterval=null;
 let roomUnsubs=[],secretUnsub=null;
-let latestChatEntries=[],guessLock=false;
+let latestChatEntries=[],guessLock=false,recoveryLock=false;
 
 const wordBank=[
 "elephant","rainbow","pizza","airplane","butterfly","watermelon",
@@ -314,6 +314,7 @@ async function initialise(){
  }
 }
 
+/* CREATE ROOM */
 async function createRoom(){
  if(!uid){toast("Please wait for Firebase to connect.");return;}
 
@@ -338,6 +339,7 @@ async function createRoom(){
  }
 }
 
+/* JOIN ROOM */
 async function joinRoom(){
  if(!uid){toast("Please wait for Firebase to connect.");return;}
 
@@ -374,6 +376,7 @@ async function joinRoom(){
  }
 }
 
+/* CLEAN UP LISTENERS */
 function stopRoomListeners(){
  roomUnsubs.forEach(unsub=>{
   try{unsub();}catch(error){}
@@ -391,6 +394,67 @@ function stopRoomListeners(){
  }
 }
 
+/* REGISTER ONLINE PRESENCE */
+function registerPresence(){
+ const connectedRef=ref(db,".info/connected");
+
+ const unsub=onValue(connectedRef,async snap=>{
+  if(snap.val()!==true||!roomCode||!uid)return;
+
+  const presenceRef=rpath(`presence/${uid}/online`);
+
+  try{
+   await onDisconnect(presenceRef).set(false);
+   await set(presenceRef,true);
+  }catch(error){
+   console.error("Presence registration:",error);
+   toast("Could not register online status.");
+  }
+ });
+
+ roomUnsubs.push(unsub);
+}
+
+/* ONLINE PLAYER LIST */
+function onlinePlayerIds(){
+ return Object.keys(players).filter(
+  id=>presence[id]?.online===true
+ );
+}
+
+/* AUTOMATIC HOST RECOVERY */
+async function attemptHostRecovery(){
+ if(recoveryLock||!uid||!roomCode)return;
+
+ const currentOwner=roomData.ownerUid;
+ if(!currentOwner||currentOwner===uid)return;
+
+ if(presence[currentOwner]?.online!==false)return;
+
+ const candidates=Object.keys(players)
+  .filter(id=>presence[id]?.online===true)
+  .sort((a,b)=>
+   (players[a]?.joinedAt||0)-(players[b]?.joinedAt||0)
+  );
+
+ if(!candidates.length)return;
+
+ const nextHost=candidates[0];
+
+ if(nextHost!==uid)return;
+
+ recoveryLock=true;
+
+ try{
+  await set(rpath("ownerUid"),uid);
+ }catch(error){
+  console.error("Host recovery:",error);
+ }finally{
+  recoveryLock=false;
+ }
+}
+
+/* SECRET WORD ACCESS */
 function manageSecretListener(){
  const allowed=isHost||isDrawer;
 
@@ -417,6 +481,7 @@ function manageSecretListener(){
  });
 }
 
+/* ENTER GAME */
 function enterGame(){
  stopRoomListeners();
 
@@ -424,11 +489,21 @@ function enterGame(){
  $("gameScreen").classList.remove("hidden");
  $("roomCodeLabel").textContent=roomCode;
 
+ registerPresence();
+
  roomUnsubs.push(onValue(rpath("players"),snap=>{
   players=snap.val()||{};
-  $("playerCount").textContent=Object.keys(players).length;
+  updatePlayerCount();
   renderLeaderboard();
   updateHostUI();
+  attemptHostRecovery();
+ }));
+
+ roomUnsubs.push(onValue(rpath("presence"),snap=>{
+  presence=snap.val()||{};
+  updatePlayerCount();
+  renderLeaderboard();
+  attemptHostRecovery();
  }));
 
  roomUnsubs.push(onValue(rpath("chat"),snap=>{
@@ -477,6 +552,7 @@ function enterGame(){
  redraw();
 }
 
+/* WATCH ROOM AND HOST CHANGES */
 function listenToRoom(){
  roomUnsubs.push(onValue(rpath(""),snap=>{
   roomData=snap.val()||{};
@@ -491,6 +567,7 @@ function listenToRoom(){
 
    if(isHost){
     toast("You are now the host!");
+
     if(round.phase==="playing"){
      processGuesses(latestChatEntries);
     }
@@ -498,7 +575,13 @@ function listenToRoom(){
   }
 
   renderLeaderboard();
+  attemptHostRecovery();
  }));
+}
+
+/* PLAYER COUNT */
+function updatePlayerCount(){
+ $("playerCount").textContent=onlinePlayerIds().length;
 }
 
 /* LEAVE ROOM */
@@ -514,7 +597,15 @@ async function leaveRoom(){
 
  try{
   if(wasHost){
-   if(remainingPlayerIds.length>0){
+   const onlineRemaining=remainingPlayerIds.filter(
+    id=>presence[id]?.online===true
+   );
+
+   if(onlineRemaining.length){
+    await update(ref(db,`rooms/${code}`),{
+     ownerUid:onlineRemaining[0]
+    });
+   }else if(remainingPlayerIds.length){
     await update(ref(db,`rooms/${code}`),{
      ownerUid:remainingPlayerIds[0]
     });
@@ -522,6 +613,8 @@ async function leaveRoom(){
     await set(ref(db,`rooms/${code}`),null);
    }
   }
+
+  await set(ref(db,`rooms/${code}/presence/${uid}/online`),false);
 
   if(!wasHost||remainingPlayerIds.length>0){
    await set(ref(db,`rooms/${code}/scores/${uid}`),null);
@@ -536,6 +629,7 @@ async function leaveRoom(){
   isDrawer=false;
   drawingEnabled=false;
   players={};
+  presence={};
   roomData={};
   round={};
   secretWord="";
@@ -569,6 +663,7 @@ async function leaveRoom(){
  }
 }
 
+/* HOST CONTROLS */
 function updateHostUI(){
  const show=isHost&&(!round.phase||round.phase==="finished");
  $("startRound").classList.toggle("hidden",!show);
@@ -576,6 +671,7 @@ function updateHostUI(){
   round.phase==="finished"?"Start next round":"Start first round";
 }
 
+/* GAME DISPLAY */
 function updateGameUI(){
  $("gameStatus").textContent=
   round.phase==="choosing"?
@@ -604,6 +700,7 @@ function updateGameUI(){
  $("eraserBtn").className=tool==="eraser"?"primary":"secondary";
 }
 
+/* LEADERBOARD */
 function renderLeaderboard(){
  const scores=roomData.scores||{};
  $("playersList").innerHTML="";
@@ -611,7 +708,8 @@ function renderLeaderboard(){
  Object.entries(players).map(([id,p])=>({
   id,
   name:p.name||"Player",
-  score:Number(scores[id]||0)
+  score:Number(scores[id]||0),
+  online:presence[id]?.online
  })).sort((a,b)=>b.score-a.score).forEach((p,i)=>{
   const row=document.createElement("div");
   row.className="player";
@@ -621,13 +719,22 @@ function renderLeaderboard(){
   name.textContent=`${i+1}. ${p.name}`;
 
   if(p.id===roomData.ownerUid){
-   name.textContent+="  ★ HOST";
+   name.textContent+=" ★ HOST";
    name.style.color="#684bc2";
    name.style.fontWeight="800";
   }
 
   if(p.id===round.drawerUid){
    name.textContent+=" ✏️";
+  }
+
+  if(p.online===false){
+   name.textContent+=" · OFFLINE";
+   name.style.opacity=".55";
+  }else if(p.online===true){
+   name.textContent+=" · ONLINE";
+  }else{
+   name.textContent+=" · CONNECTING";
   }
 
   const score=document.createElement("span");
@@ -639,13 +746,13 @@ function renderLeaderboard(){
  });
 }
 
+/* CHAT */
 function renderChat(messages){
  const entries=Object.entries(messages).sort(
   (a,b)=>(a[1].time||0)-(b[1].time||0)
  );
 
  latestChatEntries=entries;
-
  $("chatMessages").innerHTML="";
 
  entries.slice(-100).forEach(([id,m])=>{
@@ -698,12 +805,13 @@ $("chatForm").addEventListener("submit",async e=>{
  }
 });
 
+/* START ROUND */
 async function startRound(){
  if(!isHost)return;
 
- const ids=Object.keys(players);
+ const ids=onlinePlayerIds();
  if(ids.length<2){
-  toast("You need at least 2 players.");
+  toast("You need at least 2 online players.");
   return;
  }
 
@@ -740,6 +848,7 @@ async function startRound(){
  }
 }
 
+/* WORD CHOICES */
 function showWordChoices(){
  const box=$("wordChoices");
  box.innerHTML="";
@@ -776,7 +885,7 @@ async function chooseWord(word){
  }
 }
 
-/* HOST-BASED GUESS VALIDATION */
+/* GUESS VALIDATION */
 async function processGuesses(entries){
  if(!isHost||guessLock||!secretWord||round.phase!=="playing")return;
 
@@ -796,12 +905,10 @@ async function processGuesses(entries){
     if(!r||r.phase!=="playing")return;
 
     r.solvedBy=r.solvedBy||{};
-
     if(r.solvedBy[m.uid])return;
 
     r.solvedBy[m.uid]=true;
     r.correctCount=Number(r.correctCount||0)+1;
-
     return r;
    });
 
@@ -817,7 +924,7 @@ async function processGuesses(entries){
     "correct"
    );
 
-   const eligibleGuessers=Object.keys(players).filter(
+   const eligibleGuessers=onlinePlayerIds().filter(
     playerId=>playerId!==round.drawerUid
    );
 
@@ -863,6 +970,7 @@ function formatTime(ms){
   String(s%60).padStart(2,"0");
 }
 
+/* DRAWING CANVAS */
 const canvas=$("drawingCanvas");
 const ctx=canvas.getContext("2d");
 
