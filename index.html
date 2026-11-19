@@ -5,472 +5,801 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Draw & Guess</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
-:root{--purple:#7868e8;--purple-dark:#6252cf;--ink:#28263c;--muted:#9694a8;--bg:#f7f6fb;--line:#eeedf3}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'DM Sans',Arial,sans-serif}
-button,input,select{font:inherit}button{cursor:pointer}
-.lobby-screen{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
-.lobby-card{background:white;border:1px solid var(--line);border-radius:20px;padding:32px;width:100%;max-width:430px;box-shadow:0 12px 40px rgba(40,35,80,.07)}
-.lobby-card h1{font-size:25px;margin:0 0 8px}.lobby-card p{font-size:13px;color:var(--muted);line-height:1.6}
-.lobby-card label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:18px 0 7px}
-.lobby-card input{width:100%;padding:13px;border:1px solid var(--line);border-radius:10px;outline:none;font-size:14px}
-.lobby-card input:focus{border-color:var(--purple)}
-.lobby-btn{width:100%;border:0;background:var(--purple);color:white;padding:13px;border-radius:10px;font-weight:700;margin-top:12px}
-.lobby-btn:hover{background:var(--purple-dark)}.lobby-btn:disabled{opacity:.5;cursor:wait}
-.lobby-divider{display:flex;align-items:center;gap:12px;color:#aaa7b8;font-size:11px;margin:22px 0}
-.lobby-divider:before,.lobby-divider:after{content:"";flex:1;height:1px;background:var(--line)}
-.lobby-status{font-size:12px;color:var(--purple);margin-top:14px;min-height:18px;overflow-wrap:anywhere}
-.topbar{height:72px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 5%}
-.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px}
-.logo{width:38px;height:38px;border-radius:12px;background:#eeeaff;display:grid;place-items:center;font-size:21px}
-.brand span{color:var(--purple)}.room-info{display:flex;align-items:center;gap:12px}
-.room-tag{background:#f4f2fc;padding:8px 13px;border-radius:9px;font-size:12px;color:#7165c5;font-weight:700}
-.online{font-size:12px;color:#858397}.online:before{content:"";display:inline-block;width:7px;height:7px;background:#50c99a;border-radius:50%;margin-right:6px}
-main{max-width:1320px;margin:32px auto;padding:0 24px}
-.heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:23px;gap:15px}
-.heading h1{font-size:25px;margin:0 0 5px;font-weight:800;letter-spacing:-.7px}.heading p{font-size:13px;color:var(--muted);margin:0}
-.round{background:white;border:1px solid var(--line);border-radius:14px;padding:11px 16px;display:flex;align-items:center;gap:12px}
-.round small{display:block;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px}
-.timer{font-size:24px;font-weight:800;color:var(--purple)}
-.start{border:0;background:var(--purple);color:white;padding:11px 17px;border-radius:10px;font-weight:700}
-.start:hover{background:var(--purple-dark)}
-.word-card{background:#eeeaff;border:1px solid #e6e0ff;border-radius:15px;padding:17px 22px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
-.word-label{font-size:10px;color:#8274ce;font-weight:800;letter-spacing:1.2px}
-.word{font-size:19px;font-weight:800;margin-top:4px}.word-status{font-size:12px;color:#827caa;margin-top:3px}
-.choices{display:flex;gap:8px;flex-wrap:wrap}
-.choice{background:white;border:1px solid #e5dfff;color:#6558bc;border-radius:9px;padding:9px 14px;font-size:12px;font-weight:700}
-.choice:hover{background:#ded7ff}
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}
-.card{background:white;border:1px solid var(--line);border-radius:17px;padding:18px;box-shadow:0 4px 18px rgba(40,35,80,.025)}
-.card-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}
-.card-title strong{font-size:14px;font-weight:800}.card-title span{font-size:11px;color:var(--muted)}
-.canvas-wrap{background:white;border:1px solid #eae9f0;border-radius:12px;overflow:hidden}
-canvas{display:block;width:100%;height:430px;background:white;touch-action:none;cursor:crosshair}
-.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:16px}
-.tool-group{display:flex;align-items:center;gap:5px;padding-right:11px;border-right:1px solid var(--line)}
-.tool{border:1px solid var(--line);background:white;width:35px;height:35px;border-radius:9px;display:grid;place-items:center;font-size:15px}
-.tool.active,.tool:hover{background:#eeeaff;border-color:#dcd4ff}
-.swatches{display:flex;align-items:center;gap:6px}
-.swatch{width:21px;height:21px;border-radius:50%;border:2px solid white;outline:1px solid #ddd;padding:0}
-.swatch.active{outline:2px solid var(--purple)}
-input[type=color]{width:30px;height:30px;border:0;padding:0;background:none}
-.brush-label{font-size:11px;color:var(--muted)}input[type=range]{width:75px;accent-color:var(--purple)}
-.clear{border:0;background:#f6f5fa;color:#77738e;border-radius:9px;padding:9px 12px;font-size:11px;font-weight:700}
-.clear:hover{background:#eeeaff;color:var(--purple)}
-.hint{color:#aaa7b8;font-size:11px;margin:13px 2px 0}
-.sidebar{display:flex;flex-direction:column;gap:16px}
-.chat-box{height:230px;overflow-y:auto;padding:4px 2px}
-.msg{font-size:12px;line-height:1.5;margin:0 0 13px;overflow-wrap:anywhere}
-.msg b{color:#6258b5}.system{color:#a09caf;font-style:italic}
-.chat-form{display:flex;gap:7px;margin-top:12px}
-.chat-form input{min-width:0;flex:1;background:#f8f7fb;border:1px solid var(--line);border-radius:9px;padding:11px;font-size:12px;outline:none}
-.chat-form input:focus{border-color:#b7adf4}
-.send{background:var(--purple);color:white;border:0;border-radius:9px;padding:0 14px;font-size:12px;font-weight:700}
-.player{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f1f0f5}
-.player:last-child{border-bottom:0}.player-left{display:flex;align-items:center;gap:10px}
-.avatar{width:31px;height:31px;border-radius:10px;background:#eeeaff;display:grid;place-items:center;font-size:14px}
-.player-name{font-size:12px;font-weight:700}.player-score{font-size:11px;color:var(--purple);font-weight:800}
-.settings{display:grid;gap:12px}.settings label{font-size:11px;color:var(--muted);font-weight:700}
-.settings select,.settings input{display:block;width:100%;margin-top:6px;border:1px solid var(--line);border-radius:9px;padding:10px;background:#faf9fc;color:var(--ink);outline:none;font-size:12px}
-.add{border:0;background:#eeeaff;color:#6558c4;border-radius:9px;padding:10px;font-size:12px;font-weight:700}
-.footer{text-align:center;padding:26px 0;color:#b0adbb;font-size:10px}
-@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:1fr 1fr}.sidebar .card:last-child{grid-column:1/-1}}
-@media(max-width:560px){main{padding:0 13px;margin:20px auto}.topbar{padding:0 15px;height:62px}.brand{font-size:16px}.online{display:none}.heading h1{font-size:21px}.sidebar{display:flex}canvas{height:300px}.round{padding:9px}}
+body{margin:0;font-family:'DM Sans',sans-serif;background:#f5f2ff;color:#30294a}
+button,input{font:inherit}
+button{cursor:pointer;border:0;border-radius:12px;padding:11px 16px;font-weight:700}
+button:disabled{opacity:.4;cursor:not-allowed}
+.primary{background:#7957df;color:white}
+.secondary{background:#ece6ff;color:#6546c7}
+.danger{background:#ffe7ec;color:#bd4560}
+input{border:1px solid #ddd5f1;border-radius:12px;padding:12px;background:white;min-width:0}
+.hidden{display:none!important}
+.screen{min-height:100vh;padding:30px 18px;display:flex;align-items:center;justify-content:center}
+.panel{background:white;border:1px solid #ebe5f8;border-radius:22px;padding:28px;box-shadow:0 12px 40px #5d438b12}
+.lobby{width:min(440px,100%)}
+.logo{text-align:center;margin-bottom:25px}
+.logo .emoji{font-size:48px}
+.logo h1{margin:8px 0 3px;font-size:30px}
+.logo p{color:#887fa0;margin:0}
+.field{display:flex;flex-direction:column;gap:7px;margin:15px 0}
+.field label{font-size:13px;font-weight:700;color:#6f6687}
+.field input{width:100%}
+.divider{display:flex;align-items:center;gap:12px;color:#aaa1bd;font-size:12px;margin:18px 0}
+.divider:before,.divider:after{content:"";height:1px;background:#eee8f6;flex:1}
+.full{width:100%}
+.hint{font-size:12px;color:#958ca8;text-align:center;margin-top:15px}
+#gameScreen{display:block;padding:18px;max-width:1450px;margin:auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px;flex-wrap:wrap}
+.brand{font-size:20px;font-weight:800}
+.roomTag{background:white;border:1px solid #e8e1f5;border-radius:12px;padding:9px 13px;font-size:13px}
+.gameGrid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px}
+.mainPanel,.sidePanel{background:white;border:1px solid #e9e3f4;border-radius:18px;padding:16px;min-width:0}
+.roundInfo{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.status{background:#f0ebff;color:#6748c8;padding:8px 12px;border-radius:20px;font-size:12px;font-weight:800}
+#timer{font-size:20px;font-weight:800}
+#canvasWrap{position:relative;background:white;border:2px solid #eee8f7;border-radius:14px;overflow:hidden}
+canvas{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}
+#canvasTools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+#canvasTools button{padding:9px 12px;font-size:12px}
+#canvasTools input[type=color]{width:38px;height:36px;padding:3px;border:1px solid #ddd5f1;border-radius:9px}
+#canvasTools input[type=range]{width:90px}
+#wordChoices{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+#wordChoices button{background:#eee8ff;color:#6546c7}
+#wordChoices button:hover{background:#dfd4ff}
+#wordNotice{font-size:13px;color:#776d8d;margin:10px 0}
+.sidePanel{display:flex;flex-direction:column;gap:14px}
+.sidePanel h3{margin:0 0 9px;font-size:15px}
+.playersList{display:flex;flex-direction:column;gap:8px}
+.player{display:flex;align-items:center;justify-content:space-between;background:#faf8ff;border-radius:11px;padding:9px 10px;font-size:13px;gap:8px}
+.playerName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.playerScore{font-weight:800;color:#7455d2}
+.hostLabel{font-size:10px;color:#987bda;font-weight:800}
+.chatBox{border:1px solid #eee8f6;border-radius:12px;height:300px;display:flex;flex-direction:column;overflow:hidden}
+#chatMessages{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.message{font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+.message strong{color:#6e50c8}
+.message.system{text-align:center;color:#8b7da8;font-style:italic}
+.message.correct{color:#16885c;font-weight:800;text-align:center}
+.chatForm{display:flex;gap:6px;padding:8px;border-top:1px solid #eee8f6}
+.chatForm input{flex:1;width:0;padding:9px;font-size:12px}
+.chatForm button{padding:9px 12px}
+#startRound{margin-top:12px}
+.smallText{font-size:11px;color:#958ca8;line-height:1.5}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#30294a;color:white;padding:11px 17px;border-radius:12px;font-size:13px;z-index:20;display:none}
+@media(max-width:850px){
+ .gameGrid{grid-template-columns:1fr}
+ .sidePanel{display:grid;grid-template-columns:1fr}
+ .chatBox{height:240px}
+}
 </style>
 </head>
+
 <body>
 
-<div id="lobby" class="lobby-screen">
-  <div class="lobby-card">
-    <div style="font-size:35px;margin-bottom:15px">🎨</div>
-    <h1>Ready to play?</h1>
-    <p>Enter your name and create a room or join your friends.</p>
-    <label for="playerName">YOUR DISPLAY NAME</label>
-    <input id="playerName" placeholder="e.g. Alex" maxlength="20">
-    <button class="lobby-btn" id="createButton" onclick="createRoom()">+ Create a room</button>
-    <div class="lobby-divider">OR JOIN YOUR FRIENDS</div>
-    <label for="roomCodeInput">ROOM CODE</label>
-    <input id="roomCodeInput" placeholder="Enter 6-character code" maxlength="6" style="text-transform:uppercase">
-    <button class="lobby-btn" id="joinButton" onclick="joinRoom()">Join room →</button>
-    <div id="lobbyStatus" class="lobby-status">Connecting to game server...</div>
+<div id="lobbyScreen" class="screen">
+  <div class="panel lobby">
+    <div class="logo">
+      <div class="emoji">🎨</div>
+      <h1>Draw & Guess</h1>
+      <p>Your own multiplayer drawing game</p>
+    </div>
+
+    <div class="field">
+      <label>Your display name</label>
+      <input id="nameInput" maxlength="20" placeholder="Enter your name">
+    </div>
+
+    <button id="createBtn" class="primary full">Create a room</button>
+
+    <div class="divider">OR JOIN A ROOM</div>
+
+    <div class="field">
+      <label>Room code</label>
+      <input id="roomInput" maxlength="6" placeholder="Enter 6-character code" style="text-transform:uppercase">
+    </div>
+
+    <button id="joinBtn" class="secondary full">Join room</button>
+    <p class="hint">Share your room code with everyone in your Zoom meeting.</p>
   </div>
 </div>
 
-<header class="topbar">
-  <div class="brand"><div class="logo">🎨</div>Draw <span>& Guess</span></div>
-  <div class="room-info">
-    <span class="online" id="connectionStatus">Connected</span>
-    <span class="room-tag" id="roomTag">ROOM · ------</span>
+<div id="gameScreen" class="hidden">
+  <div class="topbar">
+    <div class="brand">🎨 Draw & Guess</div>
+    <div class="roomTag">Room: <strong id="roomCodeLabel"></strong> · <span id="playerCount">0</span> players</div>
+    <button id="copyRoomBtn" class="secondary">Copy room code</button>
   </div>
-</header>
 
-<main>
-  <section class="heading">
-    <div><h1>Let's play!</h1><p>Draw something. Let everyone guess. Have fun.</p></div>
-    <div class="round">
-      <div><small>TIME LEFT</small><div class="timer" id="timer">60s</div></div>
-      <button class="start" onclick="startTimer()">Start round ↗</button>
-    </div>
-  </section>
-
-  <section class="word-card">
-    <div>
-      <div class="word-label">YOUR SECRET WORD</div>
-      <div class="word" id="word">Choose a word first</div>
-      <div class="word-status" id="status">Pick one of the words to begin drawing.</div>
-    </div>
-    <div class="choices" id="choices">
-      <button class="choice" onclick="chooseWord('Pineapple')">Pineapple</button>
-      <button class="choice" onclick="chooseWord('Airplane')">Airplane</button>
-      <button class="choice" onclick="chooseWord('Dinosaur')">Dinosaur</button>
-    </div>
-  </section>
-
-  <div class="layout">
-    <section class="card">
-      <div class="card-title"><strong>✏️ Drawing board</strong><span id="drawerLabel">Drawer: Waiting</span></div>
-      <div class="canvas-wrap"><canvas id="board" width="900" height="500"></canvas></div>
-      <div class="toolbar">
-        <div class="tool-group">
-          <button class="tool active" id="pen" onclick="setTool('pen')" title="Pen">✏️</button>
-          <button class="tool" id="eraser" onclick="setTool('eraser')" title="Eraser">◻️</button>
+  <div class="gameGrid">
+    <section class="mainPanel">
+      <div class="roundInfo">
+        <div>
+          <div class="status" id="gameStatus">Waiting for players</div>
+          <div id="wordNotice">The host can start a round when everyone is ready.</div>
         </div>
-        <div class="swatches">
-          <button class="swatch active" style="background:#28263c" onclick="setColour('#28263c',this)"></button>
-          <button class="swatch" style="background:#e65b75" onclick="setColour('#e65b75',this)"></button>
-          <button class="swatch" style="background:#f3a541" onclick="setColour('#f3a541',this)"></button>
-          <button class="swatch" style="background:#52b88a" onclick="setColour('#52b88a',this)"></button>
-          <button class="swatch" style="background:#5794e7" onclick="setColour('#5794e7',this)"></button>
-          <button class="swatch" style="background:#9b75df" onclick="setColour('#9b75df',this)"></button>
-          <input type="color" id="colour" value="#28263c" title="Custom colour">
-        </div>
-        <div class="tool-group"><span class="brush-label">Size</span><input type="range" id="size" min="2" max="30" value="5"></div>
-        <button class="clear" onclick="undo()">↶ Undo</button>
-        <button class="clear" onclick="clearBoard()">Clear all</button>
+        <div id="timer">--:--</div>
       </div>
-      <p class="hint">Tip: Keep your drawings simple. The best clues are sometimes the easiest!</p>
+
+      <div id="wordChoices" class="hidden"></div>
+
+      <div id="canvasWrap">
+        <canvas id="drawingCanvas" width="1000" height="560"></canvas>
+      </div>
+
+      <div id="canvasTools">
+        <button id="penBtn" class="secondary">✏️ Pen</button>
+        <button id="eraserBtn" class="secondary">🧽 Eraser</button>
+        <input id="colorPicker" type="color" value="#30294a" title="Choose colour">
+        <label class="smallText">Size</label>
+        <input id="brushSize" type="range" min="2" max="30" value="5">
+        <button id="undoBtn" class="secondary">Undo</button>
+        <button id="clearBtn" class="danger">Clear</button>
+      </div>
+
+      <button id="startRound" class="primary full hidden">Start next round</button>
+      <p class="smallText" id="drawerHelp">Only the selected drawer can draw. Everyone else can guess in the chat.</p>
     </section>
 
-    <aside class="sidebar">
-      <section class="card">
-        <div class="card-title"><strong>💬 Live chat</strong><span>Guess the word!</span></div>
-        <div class="chat-box" id="chat">
-          <p class="msg system">Welcome to Draw & Guess!</p>
-          <p class="msg system">Waiting for players...</p>
-        </div>
-        <form class="chat-form" onsubmit="sendGuess(event)">
-          <input id="guess" placeholder="Type your guess..." autocomplete="off">
-          <button class="send">Send</button>
-        </form>
+    <aside class="sidePanel">
+      <section>
+        <h3>🏆 Leaderboard</h3>
+        <div id="playersList" class="playersList"></div>
       </section>
 
-      <section class="card">
-        <div class="card-title"><strong>🏆 Players</strong><span id="playerCount">0 players</span></div>
-        <div id="playerList"><p class="msg system">Players will appear here.</p></div>
-      </section>
-
-      <section class="card">
-        <div class="card-title"><strong>⚙️ Game settings</strong></div>
-        <div class="settings">
-          <label>ROUND DURATION
-            <select id="duration" onchange="resetTimer()">
-              <option value="30">30 seconds</option><option value="45">45 seconds</option>
-              <option value="60" selected>60 seconds</option><option value="90">90 seconds</option>
-              <option value="120">120 seconds</option>
-            </select>
-          </label>
-          <label>ADD WORDS TO WORD BANK<input id="newWords" placeholder="e.g. Pizza, Cat, Beach"></label>
-          <button class="add" onclick="addWords()">+ Add words</button>
+      <section>
+        <h3>💬 Live chat</h3>
+        <div class="chatBox">
+          <div id="chatMessages"></div>
+          <form id="chatForm" class="chatForm">
+            <input id="chatInput" placeholder="Type your guess..." maxlength="120" autocomplete="off">
+            <button class="primary" type="submit">Send</button>
+          </form>
         </div>
       </section>
+
+      <p class="smallText">Correct guesses earn points. The drawer earns points when players guess correctly.</p>
     </aside>
   </div>
-  <div class="footer">DRAW & GUESS · MADE FOR GAME NIGHT ✨</div>
-</main>
+</div>
 
-<script>
-const canvas=document.getElementById('board');
-const ctx=canvas.getContext('2d');
-let strokes=[],currentStroke=[],remoteLiveStroke=null,drawing=false;
-let colour='#28263c',brushSize=5,tool='pen';
-let currentWord='',seconds=60,interval=null;
-let wordBank=['Pineapple','Airplane','Dinosaur','Ice cream','Guitar','Rainbow'];
-let lastPublish=0;
-
-function position(e){
-  const r=canvas.getBoundingClientRect();
-  return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height};
-}
-function redraw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const all=[...strokes];
-  if(drawing&&currentStroke.length)all.push(currentStroke);
-  else if(remoteLiveStroke&&remoteLiveStroke.length)all.push(remoteLiveStroke);
-  all.forEach(s=>{
-    if(!s||!s.length)return;
-    if(s.length===1){
-      const p=s[0];ctx.fillStyle=p.colour;ctx.beginPath();
-      ctx.arc(p.x,p.y,p.size/2,0,Math.PI*2);ctx.fill();
-    }
-    for(let i=1;i<s.length;i++){
-      const a=s[i-1],b=s[i];ctx.strokeStyle=b.colour;ctx.lineWidth=b.size;
-      ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
-      ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
-    }
-  });
-}
-function publishDrawing(live=true){
-  if(window.syncDrawing){
-    window.syncDrawing({
-      strokes:strokes,
-      liveStroke:live&&currentStroke.length?currentStroke:null
-    });
-  }
-}
-canvas.addEventListener('pointerdown',e=>{
-  drawing=true;canvas.setPointerCapture(e.pointerId);
-  const p=position(e);
-  currentStroke=[{...p,colour:tool==='eraser'?'#ffffff':colour,size:brushSize*(tool==='eraser'?4:1)}];
-  redraw();publishDrawing(true);
-});
-canvas.addEventListener('pointermove',e=>{
-  if(!drawing)return;
-  const p=position(e);
-  currentStroke.push({...p,colour:tool==='eraser'?'#ffffff':colour,size:brushSize*(tool==='eraser'?4:1)});
-  redraw();
-  const now=Date.now();
-  if(now-lastPublish>60){lastPublish=now;publishDrawing(true);}
-});
-function finish(){
-  if(!drawing)return;
-  drawing=false;
-  if(currentStroke.length)strokes.push(currentStroke);
-  currentStroke=[];remoteLiveStroke=null;redraw();publishDrawing(false);
-}
-canvas.addEventListener('pointerup',finish);
-canvas.addEventListener('pointercancel',finish);
-canvas.addEventListener('lostpointercapture',finish);
-
-window.receiveDrawing=function(data){
-  if(!data)return;
-  strokes=Array.isArray(data.strokes)?data.strokes:[];
-  remoteLiveStroke=data.liveStroke||null;
-  redraw();
-};
-function setTool(t){
-  tool=t;
-  document.getElementById('pen').classList.toggle('active',t==='pen');
-  document.getElementById('eraser').classList.toggle('active',t==='eraser');
-}
-function setColour(c,el){
-  colour=c;setTool('pen');
-  document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
-  if(el)el.classList.add('active');
-  document.getElementById('colour').value=c;
-}
-document.getElementById('colour').oninput=e=>setColour(e.target.value);
-document.getElementById('size').oninput=e=>brushSize=Number(e.target.value);
-
-function undo(){
-  if(!strokes.length)return;
-  strokes.pop();remoteLiveStroke=null;redraw();publishDrawing(false);
-}
-function clearBoard(){
-  strokes=[];currentStroke=[];remoteLiveStroke=null;redraw();publishDrawing(false);
-}
-function chooseWord(word){
-  currentWord=word;
-  document.getElementById('word').textContent=word;
-  document.getElementById('status').textContent='You are drawing. Let everyone guess!';
-  document.getElementById('choices').style.display='none';
-  clearBoard();resetTimer();addMessage('System','A new drawing round has started!');
-}
-function startTimer(){
-  if(!currentWord){addMessage('System','Choose a word before starting!');return;}
-  clearInterval(interval);seconds=Number(document.getElementById('duration').value);updateTimer();
-  interval=setInterval(()=>{
-    seconds--;updateTimer();
-    if(seconds<=0){
-      clearInterval(interval);addMessage('System','Time is up! The word was '+currentWord+'.');
-      document.getElementById('status').textContent='Round ended!';
-      document.getElementById('word').textContent=currentWord;
-      document.getElementById('choices').style.display='flex';
-    }
-  },1000);
-}
-function resetTimer(){clearInterval(interval);seconds=Number(document.getElementById('duration').value);updateTimer();}
-function updateTimer(){document.getElementById('timer').textContent=seconds+'s';}
-function addMessage(name,message){
-  const p=document.createElement('p');p.className='msg';
-  const b=document.createElement('b');b.textContent=name+': ';
-  p.append(b,document.createTextNode(message));
-  const chat=document.getElementById('chat');chat.appendChild(p);chat.scrollTop=chat.scrollHeight;
-}
-function sendGuess(e){
-  e.preventDefault();const input=document.getElementById('guess');const guess=input.value.trim();
-  if(!guess)return;
-  if(currentWord&&guess.toLowerCase()===currentWord.toLowerCase()){
-    addMessage('You','Correct! 🎉');addMessage('System','You guessed the word!');
-  }else addMessage('You',guess);
-  input.value='';
-}
-function addWords(){
-  const input=document.getElementById('newWords');
-  const added=input.value.split(',').map(w=>w.trim()).filter(Boolean);
-  if(!added.length)return;
-  wordBank.push(...added);addMessage('System',added.length+' word(s) added to the word bank.');input.value='';
-}
-updateTimer();
-</script>
+<div id="toast"></div>
 
 <script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
-import{getDatabase,ref,get,set,onValue,onDisconnect,runTransaction}from"https://www.gstatic.com/firebasejs/13.4.0/firebase-database.js";
-import{getAuth,signInAnonymously}from"https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+import {
+  getAuth, signInAnonymously
+} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+import {
+  getDatabase, ref, set, get, update, push, onValue,
+  runTransaction, remove
+} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-database.js";
 
-const firebaseConfig={
-  apiKey:"AIzaSyDmzAJsH2bUXRtO35ictTMkzL2GgkfcfNc",
-  authDomain:"zoom-draw-guess.firebaseapp.com",
-  databaseURL:"https://zoom-draw-guess-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId:"zoom-draw-guess",
-  storageBucket:"zoom-draw-guess.firebasestorage.app",
-  messagingSenderId:"24892001851",
-  appId:"1:24892001851:web:07d73bb1a50515d134961e"
-};
-const app=initializeApp(firebaseConfig);
-const database=getDatabase(app);
-const auth=getAuth(app);
-let currentUser=null,currentRoom=null,playerName='',playersListener=null,drawingListener=null;
-
-const statusBox=document.getElementById('lobbyStatus');
-const createButton=document.getElementById('createButton');
-const joinButton=document.getElementById('joinButton');
-function status(message){statusBox.textContent=message;}
-function makeRoomCode(){
-  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code='';
-  for(let i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];
-  return code;
-}
-function getPlayerName(){
-  const name=document.getElementById('playerName').value.trim();
-  if(!name){status('Please enter your display name first.');return null;}
-  if(name.length>20){status('Your name must be 20 characters or fewer.');return null;}
-  return name;
-}
-
-/* Send drawing changes to the current room */
-window.syncDrawing=async function(data){
-  if(!currentRoom)return;
-  try{
-    await set(ref(database,`rooms/${currentRoom}/drawing`),{
-      strokes:data.strokes||[],
-      liveStroke:data.liveStroke||null,
-      updatedAt:Date.now()
-    });
-  }catch(error){
-    console.error('Drawing sync error:',error);
-    document.getElementById('connectionStatus').textContent='Sync error';
-  }
+const firebaseConfig = {
+  apiKey: "AIzaSyDmzAJsH2bUXRtO35ictTMkzL2GgkfcfNc",
+  authDomain: "zoom-draw-guess.firebaseapp.com",
+  databaseURL: "https://zoom-draw-guess-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "zoom-draw-guess",
+  storageBucket: "zoom-draw-guess.firebasestorage.app",
+  messagingSenderId: "24892001851",
+  appId: "1:24892001851:web:07d73bb1a50515d134961e"
 };
 
-async function enterRoom(code,name,role){
-  currentRoom=code;playerName=name;
-  const playerRef=ref(database,`rooms/${code}/players/${currentUser.uid}`);
-  await onDisconnect(playerRef).remove();
-  if(role==='player'){
-    await set(playerRef,{name:name,role:'player',joinedAt:Date.now()});
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+let uid = null;
+let roomCode = null;
+let roomData = null;
+let isHost = false;
+let players = {};
+let currentRound = {};
+let secretWord = "";
+let currentDrawer = false;
+let chatUnsubscribe = null;
+let drawingUnsubscribe = null;
+let roundUnsubscribe = null;
+let playersUnsubscribe = null;
+let processedMessages = new Set();
+let strokes = [];
+let liveStroke = null;
+let drawingEnabled = false;
+let tool = "pen";
+let timerInterval = null;
+
+const words = [
+  "elephant","rainbow","pizza","airplane","butterfly","watermelon",
+  "guitar","astronaut","dinosaur","ice cream","basketball","octopus",
+  "toothbrush","volcano","unicorn","popcorn","helicopter","turtle",
+  "pineapple","snowman","mermaid","hamburger","camera","crocodile",
+  "birthday cake","football","computer","penguin","sunflower","shark",
+  "jellyfish","firefighter","rocket","coffee","sunglasses","panda",
+  "dragon","spaghetti","washing machine","toilet","umbrella","ghost",
+  "castle","pizza delivery","lighthouse","kangaroo","train","robot"
+];
+
+const $ = id => document.getElementById(id);
+const roomRef = () => ref(db, `rooms/${roomCode}`);
+const playersRef = () => ref(db, `rooms/${roomCode}/players`);
+const chatRef = () => ref(db, `rooms/${roomCode}/chat`);
+const roundRef = () => ref(db, `rooms/${roomCode}/round`);
+const scoresRef = () => ref(db, `rooms/${roomCode}/scores`);
+const drawingRef = () => ref(db, `rooms/${roomCode}/drawing`);
+const privateRef = () => ref(db, `privateRooms/${roomCode}`);
+
+function toast(message){
+  $("toast").textContent = message;
+  $("toast").style.display = "block";
+  setTimeout(() => $("toast").style.display = "none", 2500);
+}
+
+function cleanName(){
+  return $("nameInput").value.trim().slice(0,20) || "Player";
+}
+
+function randomCode(){
+  return Math.random().toString(36).substring(2,8).toUpperCase();
+}
+
+function randomWords(){
+  const shuffled = [...words].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0,3);
+}
+
+async function authenticate(){
+  if(!auth.currentUser){
+    await signInAnonymously(auth);
   }
-  document.getElementById('lobby').style.display='none';
-  document.getElementById('roomTag').textContent='ROOM · '+code;
-  document.getElementById('drawerLabel').textContent='Player: '+name+(role==='host'?' · Host':'');
-  addMessage('System','You joined room '+code+'.');
-
-  if(playersListener)playersListener();
-  if(drawingListener)drawingListener();
-
-  playersListener=onValue(ref(database,`rooms/${code}/players`),snapshot=>{
-    const data=snapshot.val()||{},list=document.getElementById('playerList');
-    list.innerHTML='';
-    const entries=Object.entries(data);
-    document.getElementById('playerCount').textContent=entries.length+(entries.length===1?' player':' players');
-    entries.forEach(([uid,player])=>{
-      const row=document.createElement('div');row.className='player';
-      const left=document.createElement('div');left.className='player-left';
-      const avatar=document.createElement('div');avatar.className='avatar';avatar.textContent='👤';
-      const nameEl=document.createElement('span');nameEl.className='player-name';nameEl.textContent=player.name||'Player';
-      left.append(avatar,nameEl);
-      const label=document.createElement('span');label.className='player-score';
-      label.textContent=player.role==='host'?'HOST':'PLAYER';
-      row.append(left,label);list.appendChild(row);
-    });
-    if(!entries.length)list.innerHTML='<p class="msg system">Waiting for players...</p>';
-  },error=>addMessage('System','Could not load player list: '+error.message));
-
-  /* Receive the latest board and all subsequent drawing updates */
-  drawingListener=onValue(ref(database,`rooms/${code}/drawing`),snapshot=>{
-    const data=snapshot.val();
-    if(window.receiveDrawing)window.receiveDrawing(data||{strokes:[],liveStroke:null});
-  },error=>addMessage('System','Could not sync drawing: '+error.message));
-
-  document.getElementById('connectionStatus').textContent='Live';
-  addMessage('System','Live drawing is enabled. Everyone in this room can draw!');
+  uid = auth.currentUser.uid;
 }
 
 async function createRoom(){
-  const name=getPlayerName();if(!name)return;
-  if(!currentUser){status('Still connecting. Please wait a moment and try again.');return;}
-  createButton.disabled=true;joinButton.disabled=true;status('Creating your room...');
   try{
-    let code='',created=false;
-    for(let attempt=0;attempt<5;attempt++){
-      code=makeRoomCode();
-      const roomRef=ref(database,`rooms/${code}`);
-      const result=await runTransaction(roomRef,existing=>{
-        if(existing!==null)return;
-        return{ownerUid:currentUser.uid,createdAt:Date.now(),players:{
-          [currentUser.uid]:{name:name,role:'host',joinedAt:Date.now()}
-        }};
-      },{applyLocally:false});
-      if(result.committed){created=true;break;}
-    }
-    if(!created)throw new Error('Could not generate a room code. Please try again.');
-    await enterRoom(code,name,'host');
-    addMessage('System','You are the host. Share this room code with your friends: '+code);
-  }catch(error){console.error(error);status('Could not create room: '+error.message);}
-  finally{createButton.disabled=false;joinButton.disabled=false;}
+    await authenticate();
+    roomCode = randomCode();
+    isHost = true;
+
+    await set(roomRef(), {
+      ownerUid: uid,
+      createdAt: Date.now(),
+      players: {
+        [uid]: {
+          name: cleanName(),
+          joinedAt: Date.now()
+        }
+      },
+      scores: {[uid]: 0}
+    });
+
+    enterGame();
+  }catch(error){
+    console.error(error);
+    toast("Could not create room: " + error.message);
+  }
 }
 
 async function joinRoom(){
-  const name=getPlayerName();if(!name)return;
-  if(!currentUser){status('Still connecting. Please wait a moment and try again.');return;}
-  const code=document.getElementById('roomCodeInput').value.trim().toUpperCase();
-  if(!/^[A-Z0-9]{6}$/.test(code)){status('Please enter a valid 6-character room code.');return;}
-  createButton.disabled=true;joinButton.disabled=true;status('Looking for room '+code+'...');
   try{
-    const roomRef=ref(database,`rooms/${code}`),snapshot=await get(roomRef);
-    if(!snapshot.exists()){status('Room not found. Check the code and try again.');return;}
-    const playerRef=ref(database,`rooms/${code}/players/${currentUser.uid}`);
-    await onDisconnect(playerRef).remove();
-    await set(playerRef,{name:name,role:'player',joinedAt:Date.now()});
-    await enterRoom(code,name,'player');
-    addMessage('System','Welcome, '+name+'!');
-  }catch(error){console.error(error);status('Could not join room: '+error.message);}
-  finally{createButton.disabled=false;joinButton.disabled=false;}
+    await authenticate();
+    const code = $("roomInput").value.trim().toUpperCase();
+    if(code.length !== 6){
+      toast("Please enter a 6-character room code.");
+      return;
+    }
+
+    roomCode = code;
+    const snapshot = await get(roomRef());
+
+    if(!snapshot.exists()){
+      toast("Room not found.");
+      roomCode = null;
+      return;
+    }
+
+    const data = snapshot.val();
+    isHost = data.ownerUid === uid;
+
+    await set(ref(db, `rooms/${roomCode}/players/${uid}`), {
+      name: cleanName(),
+      joinedAt: Date.now()
+    });
+
+    const scoreSnap = await get(ref(db, `rooms/${roomCode}/scores/${uid}`));
+    if(!scoreSnap.exists()){
+      await set(ref(db, `rooms/${roomCode}/scores/${uid}`), 0);
+    }
+
+    enterGame();
+  }catch(error){
+    console.error(error);
+    toast("Could not join room: " + error.message);
+  }
 }
-window.createRoom=createRoom;
-window.joinRoom=joinRoom;
-document.getElementById('roomCodeInput').addEventListener('input',e=>{
-  e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+
+function enterGame(){
+  $("lobbyScreen").classList.add("hidden");
+  $("gameScreen").classList.remove("hidden");
+  $("roomCodeLabel").textContent = roomCode;
+  listenToRoom();
+  listenToPlayers();
+  listenToChat();
+  listenToRound();
+  listenToDrawing();
+  resizeCanvas();
+}
+
+function listenToRoom(){
+  onValue(roomRef(), snap => {
+    roomData = snap.val() || {};
+    isHost = roomData.ownerUid === uid;
+    updateStartButton();
+  });
+}
+
+function listenToPlayers(){
+  playersUnsubscribe = onValue(playersRef(), snap => {
+    players = snap.val() || {};
+    $("playerCount").textContent = Object.keys(players).length;
+    renderLeaderboard();
+    updateStartButton();
+  });
+}
+
+function renderLeaderboard(){
+  const scores = roomData?.scores || {};
+  const sorted = Object.entries(players).map(([id, player]) => ({
+    id,
+    name: player.name || "Player",
+    score: Number(scores[id] || 0),
+    isHost: id === roomData?.ownerUid
+  })).sort((a,b) => b.score - a.score);
+
+  $("playersList").innerHTML = "";
+
+  sorted.forEach((player,index) => {
+    const row = document.createElement("div");
+    row.className = "player";
+    const left = document.createElement("span");
+    left.className = "playerName";
+    left.textContent = `${index + 1}. ${player.name}${player.id === currentRound.drawerUid ? " ✏️" : ""}`;
+    const right = document.createElement("span");
+    right.className = "playerScore";
+    right.textContent = `${player.score} pts`;
+    row.append(left,right);
+    $("playersList").appendChild(row);
+  });
+}
+
+function listenToChat(){
+  onValue(chatRef(), snap => {
+    const messages = snap.val() || {};
+    const entries = Object.entries(messages).sort((a,b) => (a[1].time || 0) - (b[1].time || 0));
+    $("chatMessages").innerHTML = "";
+
+    entries.slice(-100).forEach(([id,msg]) => {
+      const div = document.createElement("div");
+      div.className = "message" + (msg.type === "system" ? " system" : "") + (msg.type === "correct" ? " correct" : "");
+
+      if(msg.type === "system" || msg.type === "correct"){
+        div.textContent = msg.text || "";
+      }else{
+        const name = document.createElement("strong");
+        name.textContent = (msg.name || "Player") + ": ";
+        const text = document.createTextNode(msg.text || "");
+        div.append(name,text);
+      }
+      $("chatMessages").appendChild(div);
+    });
+
+    $("chatMessages").scrollTop = $("chatMessages").scrollHeight;
+
+    if(currentDrawer && currentRound.phase === "playing"){
+      checkIncomingGuesses(entries);
+    }
+  });
+}
+
+function listenToRound(){
+  roundUnsubscribe = onValue(roundRef(), snap => {
+    currentRound = snap.val() || {};
+    currentDrawer = currentRound.drawerUid === uid;
+
+    $("gameStatus").textContent = getStatusText();
+    $("wordNotice").textContent = getWordNotice();
+    $("timer").textContent = currentRound.phase === "playing" ? formatTime(currentRound.endAt - Date.now()) : "--:--";
+
+    drawingEnabled = currentDrawer && currentRound.phase === "playing";
+    updateTools();
+    updateStartButton();
+    renderLeaderboard();
+
+    if(currentRound.phase === "choosing" && currentDrawer){
+      showWordChoices();
+    }else{
+      $("wordChoices").classList.add("hidden");
+    }
+
+    if(currentRound.phase === "finished" && currentRound.revealedWord){
+      $("wordNotice").textContent = "The word was: " + currentRound.revealedWord;
+    }
+
+    if(timerInterval) clearInterval(timerInterval);
+    if(currentRound.phase === "playing"){
+      timerInterval = setInterval(() => {
+        const remaining = Math.max(0, currentRound.endAt - Date.now());
+        $("timer").textContent = formatTime(remaining);
+        if(remaining <= 0 && currentDrawer){
+          finishRound();
+        }
+      }, 250);
+    }
+  });
+}
+
+function getStatusText(){
+  if(currentRound.phase === "choosing"){
+    return currentDrawer ? "Choose your word!" : (players[currentRound.drawerUid]?.name || "The drawer") + " is choosing a word";
+  }
+  if(currentRound.phase === "playing"){
+    return currentDrawer ? "You are drawing!" : (players[currentRound.drawerUid]?.name || "Someone") + " is drawing";
+  }
+  if(currentRound.phase === "finished") return "Round finished";
+  return "Waiting for the host";
+}
+
+function getWordNotice(){
+  if(currentRound.phase === "choosing"){
+    return currentDrawer ? "Choose one word below. Keep it secret!" : "Get ready to guess!";
+  }
+  if(currentRound.phase === "playing"){
+    return currentDrawer ? "Your word: " + (secretWord || "Loading...") : "Type your guess in the live chat!";
+  }
+  if(currentRound.phase === "finished") return "Waiting for the next round.";
+  return "The host can start a round when everyone is ready.";
+}
+
+function formatTime(ms){
+  const seconds = Math.ceil(Math.max(0,ms) / 1000);
+  return `${String(Math.floor(seconds/60)).padStart(2,"0")}:${String(seconds%60).padStart(2,"0")}`;
+}
+
+function updateStartButton(){
+  const canStart = isHost && (!currentRound.phase || currentRound.phase === "finished");
+  $("startRound").classList.toggle("hidden", !canStart);
+  $("startRound").textContent = currentRound.phase === "finished" ? "Start next round" : "Start first round";
+}
+
+async function startRound(){
+  if(!isHost) return;
+
+  const playerIds = Object.keys(players);
+  if(playerIds.length < 2){
+    toast("You need at least 2 players to start.");
+    return;
+  }
+
+  const previousIndex = Number(currentRound.turnIndex ?? -1);
+  const nextIndex = (previousIndex + 1) % playerIds.length;
+  const drawerUid = playerIds[nextIndex];
+
+  processedMessages.clear();
+  secretWord = "";
+  strokes = [];
+  liveStroke = null;
+
+  try{
+    await remove(privateRef());
+    await set(drawingRef(), {strokes: [], liveStroke: null});
+
+    await set(roundRef(), {
+      number: Number(currentRound.number || 0) + 1,
+      turnIndex: nextIndex,
+      drawerUid,
+      phase: "choosing",
+      startedAt: Date.now(),
+      endAt: 0,
+      correctCount: 0,
+      solvedBy: {}
+    });
+
+    await addSystemMessage((players[drawerUid]?.name || "A player") + " is the drawer!");
+  }catch(error){
+    toast("Could not start round: " + error.message);
+  }
+}
+
+function showWordChoices(){
+  const box = $("wordChoices");
+  box.innerHTML = "";
+  box.classList.remove("hidden");
+
+  const choices = randomWords();
+  choices.forEach(word => {
+    const button = document.createElement("button");
+    button.textContent = word;
+    button.onclick = () => chooseWord(word);
+    box.appendChild(button);
+  });
+}
+
+async function chooseWord(word){
+  if(!currentDrawer || currentRound.phase !== "choosing") return;
+
+  try{
+    secretWord = word;
+    await set(ref(db, `privateRooms/${roomCode}/secretWord`), word);
+    await update(roundRef(), {
+      phase: "playing",
+      endAt: Date.now() + 80000,
+      correctCount: 0,
+      solvedBy: {}
+    });
+    await addSystemMessage("The round has started! Start guessing.");
+  }catch(error){
+    toast("Could not select word: " + error.message);
+  }
+}
+
+function listenToDrawing(){
+  drawingUnsubscribe = onValue(drawingRef(), snap => {
+    const data = snap.val() || {};
+    strokes = data.strokes || [];
+    liveStroke = data.liveStroke || null;
+    redrawCanvas();
+  });
+}
+
+async function addChatMessage(text){
+  await push(chatRef(), {
+    uid,
+    name: players[uid]?.name || cleanName(),
+    text,
+    type: "message",
+    time: Date.now()
+  });
+}
+
+async function addSystemMessage(text,type="system"){
+  await push(chatRef(), {text,type,time:Date.now()});
+}
+
+$("chatForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const text = $("chatInput").value.trim();
+  if(!text || !roomCode) return;
+  $("chatInput").value = "";
+  await addChatMessage(text);
 });
-signInAnonymously(auth).then(result=>{
-  currentUser=result.user;status('Connected! Enter your name to get started.');
-  console.log('Firebase connected successfully!');
-}).catch(error=>{
-  console.error('Firebase authentication error:',error);
-  status('Connection error: '+error.message);
+
+async function checkIncomingGuesses(entries){
+  if(!secretWord){
+    try{
+      const snap = await get(ref(db, `privateRooms/${roomCode}/secretWord`));
+      secretWord = snap.val() || "";
+      $("wordNotice").textContent = getWordNotice();
+    }catch(error){
+      console.error(error);
+    }
+  }
+  if(!secretWord) return;
+
+  for(const [messageId,msg] of entries){
+    if(processedMessages.has(messageId)) continue;
+    processedMessages.add(messageId);
+
+    if(msg.type !== "message" || msg.uid === uid) continue;
+    if(msg.time < (currentRound.startedAt || 0)) continue;
+
+    const guess = (msg.text || "").trim().toLowerCase();
+    if(guess !== secretWord.toLowerCase()) continue;
+
+    const solved = await runTransaction(roundRef(), round => {
+      if(!round || round.phase !== "playing") return;
+      if(round.solvedBy && round.solvedBy[msg.uid]) return;
+      round.solvedBy = round.solvedBy || {};
+      round.solvedBy[msg.uid] = true;
+      round.correctCount = Number(round.correctCount || 0) + 1;
+      return round;
+    });
+
+    if(!solved.committed) continue;
+
+    const correctCount = Number(solved.snapshot.val().correctCount || 1);
+    const guesserPoints = correctCount === 1 ? 100 : 50;
+
+    await addPoints(msg.uid, guesserPoints);
+    await addPoints(uid, 50);
+
+    await push(chatRef(), {
+      text: `${msg.name || "A player"} guessed correctly!`,
+      type: "correct",
+      time: Date.now()
+    });
+
+    if(correctCount >= Object.keys(players).length - 1){
+      await finishRound();
+    }
+  }
+}
+
+async function addPoints(playerUid, points){
+  const scoreRef = ref(db, `rooms/${roomCode}/scores/${playerUid}`);
+  await runTransaction(scoreRef, current => Number(current || 0) + points);
+}
+
+async function finishRound(){
+  if(!currentDrawer || currentRound.phase !== "playing") return;
+  try{
+    await update(roundRef(), {
+      phase: "finished",
+      revealedWord: secretWord || "Unknown",
+      endAt: Date.now()
+    });
+    await addSystemMessage("Round over! The word was " + (secretWord || "unknown") + ".");
+  }catch(error){
+    console.error(error);
+  }
+}
+
+$("startRound").addEventListener("click", startRound);
+$("createBtn").addEventListener("click", createRoom);
+$("joinBtn").addEventListener("click", joinRoom);
+
+$("copyRoomBtn").addEventListener("click", async () => {
+  try{
+    await navigator.clipboard.writeText(roomCode);
+    toast("Room code copied!");
+  }catch{
+    toast("Your room code is " + roomCode);
+  }
 });
+
+const canvas = $("drawingCanvas");
+const ctx = canvas.getContext("2d");
+let drawing = false;
+let activePoints = [];
+
+function resizeCanvas(){
+  redrawCanvas();
+}
+
+function redrawCanvas(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  (strokes || []).forEach(drawStroke);
+  if(liveStroke) drawStroke(liveStroke);
+}
+
+function drawStroke(stroke){
+  if(!stroke || !stroke.points || !stroke.points.length) return;
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = stroke.size || 5;
+  ctx.strokeStyle = stroke.tool === "eraser" ? "#ffffff" : (stroke.color || "#30294a");
+
+  const points = stroke.points;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x * canvas.width, points[0].y * canvas.height);
+  if(points.length === 1){
+    ctx.lineTo(points[0].x * canvas.width + 0.1, points[0].y * canvas.height + 0.1);
+  }else{
+    points.forEach(point => ctx.lineTo(point.x * canvas.width, point.y * canvas.height));
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function pointerPosition(event){
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: Math.max(0,Math.min(1,(event.clientX - rect.left) / rect.width)),
+    y: Math.max(0,Math.min(1,(event.clientY - rect.top) / rect.height))
+  };
+}
+
+canvas.addEventListener("pointerdown", event => {
+  if(!drawingEnabled) return;
+  drawing = true;
+  canvas.setPointerCapture(event.pointerId);
+  activePoints = [pointerPosition(event)];
+  liveStroke = {
+    points: activePoints,
+    color: $("colorPicker").value,
+    size: Number($("brushSize").value),
+    tool
+  };
+  redrawCanvas();
+});
+
+canvas.addEventListener("pointermove", event => {
+  if(!drawing || !drawingEnabled) return;
+  activePoints.push(pointerPosition(event));
+  liveStroke = {...liveStroke,points:[...activePoints]};
+  redrawCanvas();
+  syncDrawing();
+});
+
+canvas.addEventListener("pointerup", endStroke);
+canvas.addEventListener("pointercancel", endStroke);
+
+async function endStroke(){
+  if(!drawing) return;
+  drawing = false;
+  if(liveStroke && activePoints.length){
+    strokes.push({...liveStroke,points:[...activePoints]});
+  }
+  liveStroke = null;
+  activePoints = [];
+  redrawCanvas();
+  await syncDrawing();
+}
+
+let syncTimeout = null;
+function syncDrawing(){
+  if(!currentDrawer || !drawingEnabled) return;
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(async () => {
+    try{
+      await set(drawingRef(), {
+        strokes,
+        liveStroke
+      });
+    }catch(error){
+      console.error("Drawing sync failed:",error);
+    }
+  },100);
+}
+
+$("penBtn").addEventListener("click", () => {
+  tool = "pen";
+  updateTools();
+});
+$("eraserBtn").addEventListener("click", () => {
+  tool = "eraser";
+  updateTools();
+});
+
+$("undoBtn").addEventListener("click", async () => {
+  if(!drawingEnabled || !strokes.length) return;
+  strokes.pop();
+  liveStroke = null;
+  redrawCanvas();
+  await set(drawingRef(),{strokes,liveStroke:null});
+});
+
+$("clearBtn").addEventListener("click", async () => {
+  if(!drawingEnabled) return;
+  strokes = [];
+  liveStroke = null;
+  redrawCanvas();
+  await set(drawingRef(),{strokes:[],liveStroke:null});
+});
+
+function updateTools(){
+  const tools = ["penBtn","eraserBtn","undoBtn","clearBtn","colorPicker","brushSize"];
+  tools.forEach(id => $(id).disabled = !drawingEnabled);
+  $("penBtn").className = tool === "pen" ? "primary" : "secondary";
+  $("eraserBtn").className = tool === "eraser" ? "primary" : "secondary";
+  canvas.style.cursor = drawingEnabled ? "crosshair" : "not-allowed";
+}
+
+window.addEventListener("resize",resizeCanvas);
+
+try{
+  await authenticate();
+}catch(error){
+  console.error(error);
+  toast("Firebase sign-in failed. Refresh and try again.");
+}
 </script>
 </body>
 </html>
