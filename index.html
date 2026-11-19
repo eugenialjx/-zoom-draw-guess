@@ -362,10 +362,15 @@ async function joinRoom(){
   const name=playerName();
   localStorage.setItem("dg_name",name);
 
+  // Reuse the existing player record when rejoining.
+  const existingPlayer=data.players?.[uid];
+
   await set(rpath(`players/${uid}`),{
-   name,joinedAt:Date.now()
+   name,
+   joinedAt:existingPlayer?.joinedAt||Date.now()
   });
 
+  // Preserve the existing score.
   const scoreSnap=await get(rpath(`scores/${uid}`));
   if(!scoreSnap.exists())await set(rpath(`scores/${uid}`),0);
 
@@ -441,7 +446,6 @@ async function attemptHostRecovery(){
  if(!candidates.length)return;
 
  const nextHost=candidates[0];
-
  if(nextHost!==uid)return;
 
  recoveryLock=true;
@@ -585,42 +589,37 @@ function updatePlayerCount(){
  $("playerCount").textContent=onlinePlayerIds().length;
 }
 
-/* LEAVE ROOM */
+/* LEAVE ROOM — PRESERVE PLAYER AND SCORE */
 async function leaveRoom(){
  if(!roomCode)return;
 
  const code=roomCode;
  const wasHost=isHost;
- const remainingPlayerIds=Object.keys(players).filter(id=>id!==uid);
 
  $("leaveRoomBtn").disabled=true;
  $("leaveRoomBtn").textContent="Leaving...";
 
  try{
+  // Transfer host to an online player if the current host leaves.
   if(wasHost){
-   const onlineRemaining=remainingPlayerIds.filter(
-    id=>presence[id]?.online===true
-   );
+   const onlineRemaining=Object.keys(players)
+    .filter(id=>id!==uid&&presence[id]?.online===true)
+    .sort((a,b)=>
+     (players[a]?.joinedAt||0)-(players[b]?.joinedAt||0)
+    );
 
    if(onlineRemaining.length){
     await update(ref(db,`rooms/${code}`),{
      ownerUid:onlineRemaining[0]
     });
-   }else if(remainingPlayerIds.length){
-    await update(ref(db,`rooms/${code}`),{
-     ownerUid:remainingPlayerIds[0]
-    });
-   }else{
-    await set(ref(db,`rooms/${code}`),null);
    }
   }
 
-  await set(ref(db,`rooms/${code}/presence/${uid}/online`),false);
-
-  if(!wasHost||remainingPlayerIds.length>0){
-   await set(ref(db,`rooms/${code}/scores/${uid}`),null);
-   await set(ref(db,`rooms/${code}/players/${uid}`),null);
-  }
+  // Mark player offline without deleting their name or score.
+  await set(
+   ref(db,`rooms/${code}/presence/${uid}/online`),
+   false
+  );
 
   stopRoomListeners();
   localStorage.removeItem("dg_room");
@@ -651,11 +650,13 @@ async function leaveRoom(){
   $("gameStatus").textContent="Waiting for players";
   $("wordNotice").textContent="The host can start a round.";
   $("startRound").classList.add("hidden");
+
   $("leaveRoomBtn").disabled=false;
   $("leaveRoomBtn").textContent="Leave room";
 
   redraw();
-  toast("You have left the room.");
+  toast("You have left the room. Your score is saved!");
+
  }catch(error){
   console.error("Leave room error:",error);
   $("leaveRoomBtn").disabled=false;
@@ -711,7 +712,11 @@ function renderLeaderboard(){
   name:p.name||"Player",
   score:Number(scores[id]||0),
   online:presence[id]?.online
- })).sort((a,b)=>b.score-a.score).forEach((p,i)=>{
+ })).sort((a,b)=>{
+  // Online first, connecting second, offline last.
+  const order=p=>p.online===true?0:p.online===false?2:1;
+  return order(a)-order(b)||b.score-a.score;
+ }).forEach((p,i)=>{
   const row=document.createElement("div");
   row.className="player";
 
