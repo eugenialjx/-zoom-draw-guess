@@ -5,76 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Draw & Guess</title>
-/* LOBBY SCREEN */
-.lobby-screen {
-  position:fixed;
-  inset:0;
-  z-index:1000;
-  background:#f7f6fb;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-}
-.lobby-card {
-  background:white;
-  border:1px solid #eeedf3;
-  border-radius:20px;
-  padding:32px;
-  width:100%;
-  max-width:430px;
-  box-shadow:0 12px 40px rgba(40,35,80,.07);
-}
-.lobby-card h1 {font-size:25px;margin:0 0 8px}
-.lobby-card p {font-size:13px;color:#9694a8;line-height:1.6}
-.lobby-card label {
-  display:block;
-  font-size:11px;
-  font-weight:700;
-  color:#9694a8;
-  margin:18px 0 7px;
-}
-.lobby-card input {
-  width:100%;
-  padding:13px;
-  border:1px solid #eeedf3;
-  border-radius:10px;
-  outline:none;
-  font-size:14px;
-}
-.lobby-card input:focus {border-color:#7868e8}
-.lobby-btn {
-  width:100%;
-  border:0;
-  background:#7868e8;
-  color:white;
-  padding:13px;
-  border-radius:10px;
-  font-weight:700;
-  margin-top:12px;
-}
-.lobby-btn:hover {background:#6252cf}
-.lobby-divider {
-  display:flex;
-  align-items:center;
-  gap:12px;
-  color:#aaa7b8;
-  font-size:11px;
-  margin:22px 0;
-}
-.lobby-divider:before,.lobby-divider:after {
-  content:"";
-  flex:1;
-  height:1px;
-  background:#eeedf3;
-}
-.lobby-status {
-  font-size:12px;
-  color:#7868e8;
-  margin-top:14px;
-  min-height:18px;
-  overflow-wrap:anywhere;
-}
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
 
@@ -85,25 +16,60 @@
   --muted:#9694a8;
   --bg:#f7f6fb;
   --line:#eeedf3;
-  --white:#fff;
 }
 * {box-sizing:border-box}
 body {
-  margin:0;
-  background:var(--bg);
-  color:var(--ink);
+  margin:0;background:var(--bg);color:var(--ink);
   font-family:'DM Sans',Arial,sans-serif;
 }
 button,input,select {font:inherit}
 button {cursor:pointer}
+
+/* LOBBY */
+.lobby-screen {
+  position:fixed;inset:0;z-index:1000;
+  background:var(--bg);display:flex;
+  align-items:center;justify-content:center;padding:20px;
+}
+.lobby-card {
+  background:white;border:1px solid var(--line);
+  border-radius:20px;padding:32px;width:100%;
+  max-width:430px;box-shadow:0 12px 40px rgba(40,35,80,.07);
+}
+.lobby-card h1 {font-size:25px;margin:0 0 8px}
+.lobby-card p {font-size:13px;color:var(--muted);line-height:1.6}
+.lobby-card label {
+  display:block;font-size:11px;font-weight:700;
+  color:var(--muted);margin:18px 0 7px;
+}
+.lobby-card input {
+  width:100%;padding:13px;border:1px solid var(--line);
+  border-radius:10px;outline:none;font-size:14px;
+}
+.lobby-card input:focus {border-color:var(--purple)}
+.lobby-btn {
+  width:100%;border:0;background:var(--purple);
+  color:white;padding:13px;border-radius:10px;
+  font-weight:700;margin-top:12px;
+}
+.lobby-btn:hover {background:var(--purple-dark)}
+.lobby-btn:disabled {opacity:.5;cursor:wait}
+.lobby-divider {
+  display:flex;align-items:center;gap:12px;
+  color:#aaa7b8;font-size:11px;margin:22px 0;
+}
+.lobby-divider:before,.lobby-divider:after {
+  content:"";flex:1;height:1px;background:var(--line);
+}
+.lobby-status {
+  font-size:12px;color:var(--purple);
+  margin-top:14px;min-height:18px;overflow-wrap:anywhere;
+}
+
+/* HEADER */
 .topbar {
-  height:72px;
-  background:#fff;
-  border-bottom:1px solid var(--line);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 5%;
+  height:72px;background:white;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;padding:0 5%;
 }
 .brand {display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px}
 .logo {
@@ -121,6 +87,8 @@ button {cursor:pointer}
   content:"";display:inline-block;width:7px;height:7px;
   background:#50c99a;border-radius:50%;margin-right:6px;
 }
+
+/* MAIN GAME */
 main {max-width:1320px;margin:32px auto;padding:0 24px}
 .heading {
   display:flex;justify-content:space-between;
@@ -133,7 +101,10 @@ main {max-width:1320px;margin:32px auto;padding:0 24px}
   border-radius:14px;padding:11px 16px;
   display:flex;align-items:center;gap:12px;
 }
-.round small {display:block;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px}
+.round small {
+  display:block;color:var(--muted);font-size:10px;
+  font-weight:700;letter-spacing:1px;
+}
 .timer {font-size:24px;font-weight:800;color:var(--purple)}
 .start {
   border:0;background:var(--purple);color:white;
@@ -151,7 +122,7 @@ main {max-width:1320px;margin:32px auto;padding:0 24px}
 .word-status {font-size:12px;color:#827caa;margin-top:3px}
 .choices {display:flex;gap:8px;flex-wrap:wrap}
 .choice {
-  background:#fff;border:1px solid #e5dfff;color:#6558bc;
+  background:white;border:1px solid #e5dfff;color:#6558bc;
   border-radius:9px;padding:9px 14px;font-size:12px;font-weight:700;
 }
 .choice:hover {background:#ded7ff}
@@ -160,7 +131,7 @@ main {max-width:1320px;margin:32px auto;padding:0 24px}
   gap:18px;align-items:start;
 }
 .card {
-  background:#fff;border:1px solid var(--line);
+  background:white;border:1px solid var(--line);
   border-radius:17px;padding:18px;
   box-shadow:0 4px 18px rgba(40,35,80,.025);
 }
@@ -171,16 +142,16 @@ main {max-width:1320px;margin:32px auto;padding:0 24px}
 .card-title strong {font-size:14px;font-weight:800}
 .card-title span {font-size:11px;color:var(--muted)}
 .canvas-wrap {
-  background:#fff;border:1px solid #eae9f0;
+  background:white;border:1px solid #eae9f0;
   border-radius:12px;overflow:hidden;
 }
 canvas {
   display:block;width:100%;height:430px;
-  background:#fff;touch-action:none;cursor:crosshair;
+  background:white;touch-action:none;cursor:crosshair;
 }
 .toolbar {
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  padding-top:16px;
+  display:flex;align-items:center;gap:10px;
+  flex-wrap:wrap;padding-top:16px;
 }
 .tool-group {
   display:flex;align-items:center;gap:5px;
@@ -195,8 +166,7 @@ canvas {
 .swatches {display:flex;align-items:center;gap:6px}
 .swatch {
   width:21px;height:21px;border-radius:50%;
-  border:2px solid white;outline:1px solid #ddd;
-  padding:0;
+  border:2px solid white;outline:1px solid #ddd;padding:0;
 }
 .swatch.active {outline:2px solid var(--purple)}
 input[type=color] {width:30px;height:30px;border:0;padding:0;background:none}
@@ -207,9 +177,7 @@ input[type=range] {width:75px;accent-color:var(--purple)}
   border-radius:9px;padding:9px 12px;font-size:11px;font-weight:700;
 }
 .clear:hover {background:#eeeaff;color:var(--purple)}
-.hint {
-  color:#aaa7b8;font-size:11px;margin:13px 2px 0;
-}
+.hint {color:#aaa7b8;font-size:11px;margin:13px 2px 0}
 .sidebar {display:flex;flex-direction:column;gap:16px}
 .chat-box {height:230px;overflow-y:auto;padding:4px 2px}
 .msg {font-size:12px;line-height:1.5;margin:0 0 13px;overflow-wrap:anywhere}
@@ -250,9 +218,8 @@ input[type=range] {width:75px;accent-color:var(--purple)}
   border:0;background:#eeeaff;color:#6558c4;
   border-radius:9px;padding:10px;font-size:12px;font-weight:700;
 }
-.footer {
-  text-align:center;padding:26px 0;color:#b0adbb;font-size:10px;
-}
+.footer {text-align:center;padding:26px 0;color:#b0adbb;font-size:10px}
+
 @media(max-width:850px) {
   .layout {grid-template-columns:1fr}
   .sidebar {display:grid;grid-template-columns:1fr 1fr}
@@ -270,8 +237,10 @@ input[type=range] {width:75px;accent-color:var(--purple)}
 }
 </style>
 </head>
+
 <body>
 
+<!-- LOBBY -->
 <div id="lobby" class="lobby-screen">
   <div class="lobby-card">
     <div style="font-size:35px;margin-bottom:15px">🎨</div>
@@ -281,7 +250,7 @@ input[type=range] {width:75px;accent-color:var(--purple)}
     <label for="playerName">YOUR DISPLAY NAME</label>
     <input id="playerName" placeholder="e.g. Alex" maxlength="20">
 
-    <button class="lobby-btn" onclick="createRoom()">
+    <button class="lobby-btn" id="createButton" onclick="createRoom()">
       + Create a room
     </button>
 
@@ -291,21 +260,23 @@ input[type=range] {width:75px;accent-color:var(--purple)}
     <input id="roomCodeInput" placeholder="Enter 6-character code"
       maxlength="6" style="text-transform:uppercase">
 
-    <button class="lobby-btn" onclick="joinRoom()">
+    <button class="lobby-btn" id="joinButton" onclick="joinRoom()">
       Join room →
     </button>
 
-    <div id="lobbyStatus" class="lobby-status"></div>
+    <div id="lobbyStatus" class="lobby-status">Connecting to game server...</div>
   </div>
 </div>
+
+<!-- GAME HEADER -->
 <header class="topbar">
   <div class="brand">
     <div class="logo">🎨</div>
     Draw <span>& Guess</span>
   </div>
   <div class="room-info">
-    <span class="online">Prototype</span>
-    <span class="room-tag">ROOM · DEMO-001</span>
+    <span class="online" id="connectionStatus">Connected</span>
+    <span class="room-tag" id="roomTag">ROOM · ------</span>
   </div>
 </header>
 
@@ -341,7 +312,7 @@ input[type=range] {width:75px;accent-color:var(--purple)}
     <section class="card">
       <div class="card-title">
         <strong>✏️ Drawing board</strong>
-        <span>Drawer: You</span>
+        <span id="drawerLabel">Drawer: Waiting</span>
       </div>
       <div class="canvas-wrap">
         <canvas id="board" width="900" height="500"></canvas>
@@ -351,7 +322,7 @@ input[type=range] {width:75px;accent-color:var(--purple)}
           <button class="tool active" id="pen" onclick="setTool('pen')" title="Pen">✏️</button>
           <button class="tool" id="eraser" onclick="setTool('eraser')" title="Eraser">◻️</button>
         </div>
-        <div class="swatches" id="swatches">
+        <div class="swatches">
           <button class="swatch active" style="background:#28263c" onclick="setColour('#28263c',this)"></button>
           <button class="swatch" style="background:#e65b75" onclick="setColour('#e65b75',this)"></button>
           <button class="swatch" style="background:#f3a541" onclick="setColour('#f3a541',this)"></button>
@@ -378,7 +349,7 @@ input[type=range] {width:75px;accent-color:var(--purple)}
         </div>
         <div class="chat-box" id="chat">
           <p class="msg system">Welcome to Draw & Guess!</p>
-          <p class="msg system">Choose a word to start the round.</p>
+          <p class="msg system">Waiting for players...</p>
         </div>
         <form class="chat-form" onsubmit="sendGuess(event)">
           <input id="guess" placeholder="Type your guess..." autocomplete="off">
@@ -388,20 +359,11 @@ input[type=range] {width:75px;accent-color:var(--purple)}
 
       <section class="card">
         <div class="card-title">
-          <strong>🏆 Leaderboard</strong>
-          <span>Top players</span>
+          <strong>🏆 Players</strong>
+          <span id="playerCount">0 players</span>
         </div>
-        <div class="player">
-          <div class="player-left"><div class="avatar">👩🏻</div><span class="player-name">You</span></div>
-          <span class="player-score">0 pts</span>
-        </div>
-        <div class="player">
-          <div class="player-left"><div class="avatar">🧑🏻</div><span class="player-name">Player 2</span></div>
-          <span class="player-score">0 pts</span>
-        </div>
-        <div class="player">
-          <div class="player-left"><div class="avatar">👨🏽</div><span class="player-name">Player 3</span></div>
-          <span class="player-score">0 pts</span>
+        <div id="playerList">
+          <p class="msg system">Players will appear here.</p>
         </div>
       </section>
 
@@ -430,6 +392,7 @@ input[type=range] {width:75px;accent-color:var(--purple)}
   <div class="footer">DRAW & GUESS · MADE FOR GAME NIGHT ✨</div>
 </main>
 
+<!-- DRAWING GAME SCRIPT -->
 <script>
 const canvas=document.getElementById('board');
 const ctx=canvas.getContext('2d');
@@ -561,32 +524,256 @@ function addWords(){
 }
 updateTimer();
 </script>
+
+<!-- FIREBASE MULTIPLAYER -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
-  import { getDatabase } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-database.js";
-  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+import {
+  getDatabase, ref, get, set, onValue, onDisconnect, runTransaction
+} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-database.js";
+import {
+  getAuth, signInAnonymously
+} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDmzAJsH2bUXRtO35ictTMkzL2GgkfcfNc",
-    authDomain: "zoom-draw-guess.firebaseapp.com",
-    databaseURL: "https://zoom-draw-guess-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "zoom-draw-guess",
-    storageBucket: "zoom-draw-guess.firebasestorage.app",
-    messagingSenderId: "24892001851",
-    appId: "1:24892001851:web:07d73bb1a50515d134961e"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyDmzAJsH2bUXRtO35ictTMkzL2GgkfcfNc",
+  authDomain: "zoom-draw-guess.firebaseapp.com",
+  databaseURL: "https://zoom-draw-guess-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "zoom-draw-guess",
+  storageBucket: "zoom-draw-guess.firebasestorage.app",
+  messagingSenderId: "24892001851",
+  appId: "1:24892001851:web:07d73bb1a50515d134961e"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const database = getDatabase(app);
-  const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+const auth = getAuth(app);
 
-  signInAnonymously(auth)
-    .then(() => {
-      console.log("Firebase connected successfully!");
-    })
-    .catch((error) => {
-      console.error("Firebase authentication error:", error);
+let currentUser = null;
+let currentRoom = null;
+let playerName = '';
+let playersListener = null;
+
+const statusBox = document.getElementById('lobbyStatus');
+const createButton = document.getElementById('createButton');
+const joinButton = document.getElementById('joinButton');
+
+function status(message) {
+  statusBox.textContent = message;
+}
+
+function makeRoomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for(let i=0;i<6;i++) {
+    code += chars[Math.floor(Math.random()*chars.length)];
+  }
+  return code;
+}
+
+function getPlayerName() {
+  const name = document.getElementById('playerName').value.trim();
+  if(!name) {
+    status('Please enter your display name first.');
+    return null;
+  }
+  if(name.length > 20) {
+    status('Your name must be 20 characters or fewer.');
+    return null;
+  }
+  return name;
+}
+
+async function enterRoom(code, name, role) {
+  currentRoom = code;
+  playerName = name;
+
+  const playerRef = ref(database, `rooms/${code}/players/${currentUser.uid}`);
+
+  await onDisconnect(playerRef).remove();
+
+  if(role === 'player') {
+    await set(playerRef, {
+      name:name,
+      role:'player',
+      joinedAt:Date.now()
     });
+  }
+
+  document.getElementById('lobby').style.display = 'none';
+  document.getElementById('roomTag').textContent = 'ROOM · ' + code;
+  document.getElementById('drawerLabel').textContent =
+    'Player: ' + name + (role === 'host' ? ' · Host' : '');
+
+  addMessage('System','You joined room ' + code + '.');
+  statusBox.textContent = '';
+
+  if(playersListener) playersListener();
+
+  const playersRef = ref(database, `rooms/${code}/players`);
+
+  playersListener = onValue(playersRef, snapshot => {
+    const data = snapshot.val() || {};
+    const list = document.getElementById('playerList');
+    list.innerHTML = '';
+
+    const entries = Object.entries(data);
+    document.getElementById('playerCount').textContent =
+      entries.length + (entries.length === 1 ? ' player' : ' players');
+
+    entries.forEach(([uid,player]) => {
+      const row = document.createElement('div');
+      row.className = 'player';
+
+      const left = document.createElement('div');
+      left.className = 'player-left';
+
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar';
+      avatar.textContent = '👤';
+
+      const name = document.createElement('span');
+      name.className = 'player-name';
+      name.textContent = player.name || 'Player';
+
+      left.append(avatar,name);
+
+      const label = document.createElement('span');
+      label.className = 'player-score';
+      label.textContent = player.role === 'host' ? 'HOST' : 'PLAYER';
+
+      row.append(left,label);
+      list.appendChild(row);
+    });
+
+    if(entries.length === 0) {
+      list.innerHTML = '<p class="msg system">Waiting for players...</p>';
+    }
+  }, error => {
+    addMessage('System','Could not load player list: ' + error.message);
+  });
+}
+
+async function createRoom() {
+  const name = getPlayerName();
+  if(!name) return;
+  if(!currentUser) {
+    status('Still connecting. Please wait a moment and try again.');
+    return;
+  }
+
+  createButton.disabled = true;
+  joinButton.disabled = true;
+  status('Creating your room...');
+
+  try {
+    let code = '';
+    let created = false;
+
+    for(let attempt=0;attempt<5;attempt++) {
+      code = makeRoomCode();
+      const roomRef = ref(database, `rooms/${code}`);
+
+      const result = await runTransaction(roomRef, existing => {
+        if(existing !== null) return;
+        return {
+          ownerUid:currentUser.uid,
+          createdAt:Date.now(),
+          players:{
+            [currentUser.uid]:{
+              name:name,
+              role:'host',
+              joinedAt:Date.now()
+            }
+          }
+        };
+      }, {applyLocally:false});
+
+      if(result.committed) {
+        created = true;
+        break;
+      }
+    }
+
+    if(!created) throw new Error('Could not generate a room code. Please try again.');
+
+    await enterRoom(code,name,'host');
+    addMessage('System','You are the host. Share this room code with your friends: ' + code);
+  } catch(error) {
+    console.error(error);
+    status('Could not create room: ' + error.message);
+  } finally {
+    createButton.disabled = false;
+    joinButton.disabled = false;
+  }
+}
+
+async function joinRoom() {
+  const name = getPlayerName();
+  if(!name) return;
+  if(!currentUser) {
+    status('Still connecting. Please wait a moment and try again.');
+    return;
+  }
+
+  const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+
+  if(!/^[A-Z0-9]{6}$/.test(code)) {
+    status('Please enter a valid 6-character room code.');
+    return;
+  }
+
+  createButton.disabled = true;
+  joinButton.disabled = true;
+  status('Looking for room ' + code + '...');
+
+  try {
+    const roomRef = ref(database, `rooms/${code}`);
+    const snapshot = await get(roomRef);
+
+    if(!snapshot.exists()) {
+      status('Room not found. Check the code and try again.');
+      return;
+    }
+
+    const playerRef = ref(database, `rooms/${code}/players/${currentUser.uid}`);
+
+    await onDisconnect(playerRef).remove();
+    await set(playerRef,{
+      name:name,
+      role:'player',
+      joinedAt:Date.now()
+    });
+
+    await enterRoom(code,name,'player');
+    addMessage('System','Welcome, ' + name + '!');
+  } catch(error) {
+    console.error(error);
+    status('Could not join room: ' + error.message);
+  } finally {
+    createButton.disabled = false;
+    joinButton.disabled = false;
+  }
+}
+
+window.createRoom = createRoom;
+window.joinRoom = joinRoom;
+
+document.getElementById('roomCodeInput').addEventListener('input',e=>{
+  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+});
+
+signInAnonymously(auth)
+  .then(result => {
+    currentUser = result.user;
+    status('Connected! Enter your name to get started.');
+    console.log('Firebase connected successfully!');
+  })
+  .catch(error => {
+    console.error('Firebase authentication error:',error);
+    status('Connection error: ' + error.message);
+  });
 </script>
+
 </body>
 </html>
