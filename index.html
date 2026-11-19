@@ -261,21 +261,39 @@ function waitForAuthentication(){
 
 async function initialise(){
  try{
+  // Check for a reset request BEFORE restoring any saved room.
+  const params=new URLSearchParams(window.location.search);
+
+  if(params.get("reset")==="1"){
+   localStorage.removeItem("dg_room");
+   params.delete("reset");
+
+   const cleanUrl=
+    window.location.pathname+
+    (params.toString()?"?"+params.toString():"")+
+    window.location.hash;
+
+   window.history.replaceState({}, "", cleanUrl);
+  }
+
   await setPersistence(auth,browserLocalPersistence);
   await waitForAuthentication();
   $("authStatus").textContent="Connected";
 
   const savedCode=localStorage.getItem("dg_room");
   const savedName=localStorage.getItem("dg_name");
+
   if(savedName)$("nameInput").value=savedName;
 
   if(savedCode){
    roomCode=savedCode;
    const snap=await get(rpath(""));
+
    if(snap.exists()){
     const data=snap.val();
     const isOwner=data.ownerUid===uid;
     const isMember=!!data.players?.[uid];
+
     if(isOwner||isMember){
      isHost=isOwner;
      enterGame();
@@ -283,6 +301,7 @@ async function initialise(){
      return;
     }
    }
+
    localStorage.removeItem("dg_room");
    roomCode=null;
   }
@@ -300,12 +319,14 @@ async function createRoom(){
   isHost=true;
   const name=playerName();
   localStorage.setItem("dg_name",name);
+
   await set(rpath(""),{
    ownerUid:uid,
    createdAt:Date.now(),
    players:{[uid]:{name,joinedAt:Date.now()}},
    scores:{[uid]:0}
   });
+
   localStorage.setItem("dg_room",roomCode);
   enterGame();
  }catch(error){
@@ -317,18 +338,29 @@ async function createRoom(){
 async function joinRoom(){
  if(!uid){toast("Please wait for Firebase to connect.");return;}
  const code=$("roomInput").value.trim().toUpperCase();
+
  if(code.length!==6){toast("Enter a 6-character room code.");return;}
+
  try{
   roomCode=code;
   const snap=await get(rpath(""));
-  if(!snap.exists()){roomCode=null;toast("Room not found.");return;}
+
+  if(!snap.exists()){
+   roomCode=null;
+   toast("Room not found.");
+   return;
+  }
+
   const data=snap.val();
   isHost=data.ownerUid===uid;
   const name=playerName();
   localStorage.setItem("dg_name",name);
+
   await set(rpath(`players/${uid}`),{name,joinedAt:Date.now()});
+
   const scoreSnap=await get(rpath(`scores/${uid}`));
   if(!scoreSnap.exists())await set(rpath(`scores/${uid}`),0);
+
   localStorage.setItem("dg_room",roomCode);
   enterGame();
  }catch(error){
@@ -340,11 +372,16 @@ async function joinRoom(){
 function stopRoomListeners(){
  roomUnsubs.forEach(unsub=>{try{unsub();}catch(error){}});
  roomUnsubs=[];
- if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
+
+ if(timerInterval){
+  clearInterval(timerInterval);
+  timerInterval=null;
+ }
 }
 
 function enterGame(){
  stopRoomListeners();
+
  $("lobbyScreen").classList.add("hidden");
  $("gameScreen").classList.remove("hidden");
  $("roomCodeLabel").textContent=roomCode;
@@ -362,18 +399,23 @@ function enterGame(){
   round=snap.val()||{};
   isDrawer=round.drawerUid===uid;
   drawingEnabled=isDrawer&&round.phase==="playing";
+
   updateGameUI();
+
   if(isDrawer&&round.phase==="choosing")showWordChoices();
   else $("wordChoices").classList.add("hidden");
 
   if(timerInterval)clearInterval(timerInterval);
+
   if(round.phase==="playing"){
    timerInterval=setInterval(()=>{
     const remaining=Math.max(0,round.endAt-Date.now());
     $("timer").textContent=formatTime(remaining);
     if(remaining===0&&isDrawer)finishRound();
    },250);
-  }else $("timer").textContent="--:--";
+  }else{
+   $("timer").textContent="--:--";
+  }
  }));
 
  roomUnsubs.push(onValue(rpath("drawing"),snap=>{
@@ -412,25 +454,22 @@ async function leaveRoom(){
  try{
   if(wasHost){
    if(remainingPlayerIds.length>0){
-    // Transfer host ownership before the current host leaves.
     await update(ref(db,`rooms/${code}`),{
      ownerUid:remainingPlayerIds[0]
     });
    }else{
-    // If the host is alone, remove the empty room.
     await set(ref(db,`rooms/${code}`),null);
-    await set(ref(db,`privateRooms/${code}`),null);
+    // The room has been deleted. Remove private data separately
+    // only if Firebase rules permit it.
    }
   }
 
   if(!wasHost||remainingPlayerIds.length>0){
-   // Remove this player's score and player entry.
    await set(ref(db,`rooms/${code}/scores/${uid}`),null);
    await set(ref(db,`rooms/${code}/players/${uid}`),null);
   }
 
   stopRoomListeners();
-
   localStorage.removeItem("dg_room");
 
   roomCode=null;
@@ -471,26 +510,38 @@ async function leaveRoom(){
 }
 
 function updateHostUI(){
- $("startRound").classList.toggle("hidden",!isHost||!(!round.phase||round.phase==="finished"));
- $("startRound").textContent=round.phase==="finished"?"Start next round":"Start first round";
+ $("startRound").classList.toggle(
+  "hidden",
+  !isHost||!(!round.phase||round.phase==="finished")
+ );
+ $("startRound").textContent=
+  round.phase==="finished"?"Start next round":"Start first round";
 }
 
 function updateGameUI(){
  $("gameStatus").textContent=
-  round.phase==="choosing"?(isDrawer?"Choose your word!":(players[round.drawerUid]?.name||"Drawer")+" is choosing"):
-  round.phase==="playing"?(isDrawer?"You are drawing!":(players[round.drawerUid]?.name||"Someone")+" is drawing"):
+  round.phase==="choosing"?
+   (isDrawer?"Choose your word!":(players[round.drawerUid]?.name||"Drawer")+" is choosing"):
+  round.phase==="playing"?
+   (isDrawer?"You are drawing!":(players[round.drawerUid]?.name||"Someone")+" is drawing"):
   round.phase==="finished"?"Round finished":"Waiting for host";
 
  $("wordNotice").textContent=
-  round.phase==="choosing"?(isDrawer?"Choose one word below. Keep it secret!":"Get ready to guess!"):
-  round.phase==="playing"?(isDrawer?"Your word: "+(secretWord||"Loading..."):"Type your guess in the live chat!"):
-  round.phase==="finished"?"The word was: "+(round.revealedWord||""):"The host can start a round.";
+  round.phase==="choosing"?
+   (isDrawer?"Choose one word below. Keep it secret!":"Get ready to guess!"):
+  round.phase==="playing"?
+   (isDrawer?"Your word: "+(secretWord||"Loading..."):"Type your guess in the live chat!"):
+  round.phase==="finished"?"The word was: "+(round.revealedWord||""):
+  "The host can start a round.";
 
  $("drawerHelp").textContent=drawingEnabled?
   "You are the drawer. Draw your word for everyone!":
   "Only the selected drawer can draw. Everyone else guesses in chat.";
 
- ["penBtn","eraserBtn","undoBtn","clearBtn","colorPicker","brushSize"].forEach(id=>$(id).disabled=!drawingEnabled);
+ ["penBtn","eraserBtn","undoBtn","clearBtn","colorPicker","brushSize"].forEach(id=>{
+  $(id).disabled=!drawingEnabled;
+ });
+
  $("penBtn").className=tool==="pen"?"primary":"secondary";
  $("eraserBtn").className=tool==="eraser"?"primary":"secondary";
 }
@@ -498,60 +549,94 @@ function updateGameUI(){
 function renderLeaderboard(){
  const scores=roomData.scores||{};
  $("playersList").innerHTML="";
+
  Object.entries(players).map(([id,p])=>({
-  id,name:p.name||"Player",score:Number(scores[id]||0)
+  id,
+  name:p.name||"Player",
+  score:Number(scores[id]||0)
  })).sort((a,b)=>b.score-a.score).forEach((p,i)=>{
   const row=document.createElement("div");
   row.className="player";
+
   const name=document.createElement("span");
   name.className="playerName";
   name.textContent=`${i+1}. ${p.name}${p.id===round.drawerUid?" ✏️":""}`;
+
   const score=document.createElement("span");
   score.className="playerScore";
   score.textContent=p.score+" pts";
+
   row.append(name,score);
   $("playersList").append(row);
  });
 }
 
 function renderChat(messages){
- const entries=Object.entries(messages).sort((a,b)=>(a[1].time||0)-(b[1].time||0));
+ const entries=Object.entries(messages).sort(
+  (a,b)=>(a[1].time||0)-(b[1].time||0)
+ );
+
  $("chatMessages").innerHTML="";
+
  entries.slice(-100).forEach(([id,m])=>{
   const div=document.createElement("div");
-  div.className="message"+(m.type==="system"?" system":"")+(m.type==="correct"?" correct":"");
-  if(m.type==="system"||m.type==="correct")div.textContent=m.text||"";
-  else{
+  div.className="message"+
+   (m.type==="system"?" system":"")+
+   (m.type==="correct"?" correct":"");
+
+  if(m.type==="system"||m.type==="correct"){
+   div.textContent=m.text||"";
+  }else{
    const strong=document.createElement("strong");
    strong.textContent=(m.name||"Player")+": ";
    div.append(strong,document.createTextNode(m.text||""));
   }
+
   $("chatMessages").append(div);
  });
+
  $("chatMessages").scrollTop=$("chatMessages").scrollHeight;
+
  if(isDrawer&&round.phase==="playing")processGuesses(entries);
 }
 
 async function sendMessage(text,type="message"){
  await push(rpath("chat"),{
-  uid,name:players[uid]?.name||playerName(),text,type,time:Date.now()
+  uid,
+  name:players[uid]?.name||playerName(),
+  text,
+  type,
+  time:Date.now()
  });
 }
 
 $("chatForm").addEventListener("submit",async e=>{
  e.preventDefault();
+
  const input=$("chatInput");
  const value=input.value.trim();
+
  if(!value)return;
+
  input.value="";
- try{await sendMessage(value);}
- catch(error){toast("Message failed: "+error.message);}
+
+ try{
+  await sendMessage(value);
+ }catch(error){
+  toast("Message failed: "+error.message);
+ }
 });
 
 async function startRound(){
  if(!isHost)return;
+
  const ids=Object.keys(players);
- if(ids.length<2){toast("You need at least 2 players.");return;}
+
+ if(ids.length<2){
+  toast("You need at least 2 players.");
+  return;
+ }
+
  const previous=Number(round.turnIndex??-1);
  const next=(previous+1)%ids.length;
  const drawerUid=ids[next];
@@ -564,6 +649,7 @@ async function startRound(){
  try{
   await set(rpath("drawing"),{strokes:[],liveStroke:null});
   await set(secretRef(),null);
+
   await set(rpath("round"),{
    number:Number(round.number||0)+1,
    turnIndex:next,
@@ -574,15 +660,23 @@ async function startRound(){
    correctCount:0,
    solvedBy:{}
   });
-  await sendMessage((players[drawerUid]?.name||"A player")+" is drawing now!","system");
- }catch(error){toast("Could not start round: "+error.message);}
+
+  await sendMessage(
+   (players[drawerUid]?.name||"A player")+" is drawing now!",
+   "system"
+  );
+ }catch(error){
+  toast("Could not start round: "+error.message);
+ }
 }
 
 function showWordChoices(){
  const box=$("wordChoices");
  box.innerHTML="";
  box.classList.remove("hidden");
+
  const options=[...wordBank].sort(()=>Math.random()-.5).slice(0,3);
+
  options.forEach(word=>{
   const btn=document.createElement("button");
   btn.textContent=word;
@@ -593,9 +687,11 @@ function showWordChoices(){
 
 async function chooseWord(word){
  if(!isDrawer||round.phase!=="choosing")return;
+
  try{
   secretWord=word;
   await set(secretRef(),word);
+
   await update(rpath("round"),{
    phase:"playing",
    startedAt:Date.now(),
@@ -603,61 +699,92 @@ async function chooseWord(word){
    correctCount:0,
    solvedBy:{}
   });
+
   await sendMessage("The round has started! Start guessing.","system");
- }catch(error){toast("Word selection failed: "+error.message);}
+ }catch(error){
+  toast("Word selection failed: "+error.message);
+ }
 }
 
 let guessLock=false;
+
 async function processGuesses(entries){
  if(guessLock||!secretWord)return;
+
  guessLock=true;
+
  try{
   for(const [id,m] of entries){
    if(processed.has(id))continue;
+
    processed.add(id);
+
    if(m.type!=="message"||m.uid===uid||m.time<(round.startedAt||0))continue;
+
    if((m.text||"").trim().toLowerCase()!==secretWord.toLowerCase())continue;
 
    const result=await runTransaction(rpath("round"),r=>{
     if(!r||r.phase!=="playing")return;
+
     r.solvedBy=r.solvedBy||{};
+
     if(r.solvedBy[m.uid])return;
+
     r.solvedBy[m.uid]=true;
     r.correctCount=Number(r.correctCount||0)+1;
+
     return r;
    });
+
    if(!result.committed)continue;
 
    const count=result.snapshot.val().correctCount;
+
    await addPoints(m.uid,count===1?100:50);
    await addPoints(uid,50);
-   await sendMessage((m.name||"A player")+" guessed correctly!","correct");
+
+   await sendMessage(
+    (m.name||"A player")+" guessed correctly!",
+    "correct"
+   );
 
    if(count>=Object.keys(players).length-1)await finishRound();
   }
- }catch(error){console.error(error);}
- finally{guessLock=false;}
+ }catch(error){
+  console.error(error);
+ }finally{
+  guessLock=false;
+ }
 }
 
 async function addPoints(id,points){
- await runTransaction(rpath("scores/"+id),value=>Number(value||0)+points);
+ await runTransaction(
+  rpath("scores/"+id),
+  value=>Number(value||0)+points
+ );
 }
 
 async function finishRound(){
  if(!isDrawer||round.phase!=="playing")return;
+
  try{
   await update(rpath("round"),{
    phase:"finished",
    revealedWord:secretWord,
    endAt:Date.now()
   });
+
   await sendMessage("Round over! The word was "+secretWord+".","system");
- }catch(error){console.error(error);}
+ }catch(error){
+  console.error(error);
+ }
 }
 
 function formatTime(ms){
  const s=Math.ceil(Math.max(0,ms)/1000);
- return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+
+ return String(Math.floor(s/60)).padStart(2,"0")+":"+
+  String(s%60).padStart(2,"0");
 }
 
 const canvas=$("drawingCanvas");
@@ -667,28 +794,39 @@ function redraw(){
  ctx.clearRect(0,0,canvas.width,canvas.height);
  ctx.fillStyle="#fff";
  ctx.fillRect(0,0,canvas.width,canvas.height);
+
  (strokes||[]).forEach(drawStroke);
+
  if(liveStroke)drawStroke(liveStroke);
 }
 
 function drawStroke(s){
  if(!s?.points?.length)return;
+
  ctx.save();
  ctx.lineCap="round";
  ctx.lineJoin="round";
  ctx.lineWidth=s.size||5;
  ctx.strokeStyle=s.tool==="eraser"?"#fff":(s.color||"#30294a");
  ctx.beginPath();
+
  const first=s.points[0];
+
  ctx.moveTo(first.x*canvas.width,first.y*canvas.height);
- if(s.points.length===1)ctx.lineTo(first.x*canvas.width+.1,first.y*canvas.height+.1);
- else s.points.forEach(p=>ctx.lineTo(p.x*canvas.width,p.y*canvas.height));
+
+ if(s.points.length===1){
+  ctx.lineTo(first.x*canvas.width+.1,first.y*canvas.height+.1);
+ }else{
+  s.points.forEach(p=>ctx.lineTo(p.x*canvas.width,p.y*canvas.height));
+ }
+
  ctx.stroke();
  ctx.restore();
 }
 
 function position(e){
  const rect=canvas.getBoundingClientRect();
+
  return {
   x:Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width)),
   y:Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height))
@@ -697,58 +835,93 @@ function position(e){
 
 canvas.addEventListener("pointerdown",e=>{
  if(!drawingEnabled)return;
+
  drawing=true;
  canvas.setPointerCapture(e.pointerId);
  activePoints=[position(e)];
+
  liveStroke={
   points:[...activePoints],
   color:$("colorPicker").value,
   size:Number($("brushSize").value),
   tool
  };
+
  redraw();
 });
 
 let syncTimer=null;
+
 canvas.addEventListener("pointermove",e=>{
  if(!drawing||!drawingEnabled)return;
+
  activePoints.push(position(e));
+
  liveStroke={...liveStroke,points:[...activePoints]};
+
  redraw();
+
  clearTimeout(syncTimer);
  syncTimer=setTimeout(syncDrawing,70);
 });
 
 async function syncDrawing(){
  if(!isDrawer||!drawingEnabled)return;
- try{await set(rpath("drawing"),{strokes,liveStroke});}
- catch(error){console.error("Drawing sync:",error);}
+
+ try{
+  await set(rpath("drawing"),{strokes,liveStroke});
+ }catch(error){
+  console.error("Drawing sync:",error);
+ }
 }
 
 async function endDrawing(){
  if(!drawing)return;
+
  drawing=false;
  clearTimeout(syncTimer);
- if(liveStroke)strokes.push({...liveStroke,points:[...activePoints]});
+
+ if(liveStroke){
+  strokes.push({...liveStroke,points:[...activePoints]});
+ }
+
  liveStroke=null;
  activePoints=[];
+
  redraw();
  await syncDrawing();
 }
+
 canvas.addEventListener("pointerup",endDrawing);
 canvas.addEventListener("pointercancel",endDrawing);
 
-$("penBtn").onclick=()=>{tool="pen";updateGameUI();};
-$("eraserBtn").onclick=()=>{tool="eraser";updateGameUI();};
+$("penBtn").onclick=()=>{
+ tool="pen";
+ updateGameUI();
+};
+
+$("eraserBtn").onclick=()=>{
+ tool="eraser";
+ updateGameUI();
+};
 
 $("undoBtn").onclick=async()=>{
  if(!drawingEnabled||!strokes.length)return;
- strokes.pop();liveStroke=null;redraw();
+
+ strokes.pop();
+ liveStroke=null;
+ redraw();
+
  await syncDrawing();
 };
+
 $("clearBtn").onclick=async()=>{
  if(!drawingEnabled)return;
- strokes=[];liveStroke=null;redraw();
+
+ strokes=[];
+ liveStroke=null;
+ redraw();
+
  await syncDrawing();
 };
 
@@ -758,8 +931,12 @@ $("startRound").onclick=startRound;
 $("leaveRoomBtn").onclick=leaveRoom;
 
 $("copyRoomBtn").onclick=async()=>{
- try{await navigator.clipboard.writeText(roomCode);toast("Room code copied!");}
- catch{toast("Room code: "+roomCode);}
+ try{
+  await navigator.clipboard.writeText(roomCode);
+  toast("Room code copied!");
+ }catch{
+  toast("Room code: "+roomCode);
+ }
 };
 
 initialise();
