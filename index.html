@@ -186,6 +186,7 @@ canvas{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}
 </div>
 <div id="toast"></div>
 
+
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
 import {
@@ -215,7 +216,8 @@ let uid=null,roomCode=null,isHost=false,players={},roomData={};
 let round={},secretWord="",isDrawer=false,drawingEnabled=false;
 let strokes=[],liveStroke=null,drawing=false,activePoints=[];
 let tool="pen",processed=new Set(),timerInterval=null;
-let roomUnsubs=[];
+let roomUnsubs=[],secretUnsub=null;
+let latestChatEntries=[],guessLock=false;
 
 const wordBank=[
 "elephant","rainbow","pizza","airplane","butterfly","watermelon",
@@ -236,7 +238,8 @@ function toast(message){
 }
 
 function playerName(){
- return $("nameInput").value.trim().slice(0,20)||localStorage.getItem("dg_name")||"Player";
+ return $("nameInput").value.trim().slice(0,20)||
+ localStorage.getItem("dg_name")||"Player";
 }
 
 function makeCode(){
@@ -253,7 +256,10 @@ function waitForAuthentication(){
     resolve(user);
    }else{
     try{await signInAnonymously(auth);}
-    catch(error){if(unsub)unsub();reject(error);}
+    catch(error){
+     if(unsub)unsub();
+     reject(error);
+    }
    }
   });
  });
@@ -261,19 +267,15 @@ function waitForAuthentication(){
 
 async function initialise(){
  try{
-  // Check for a reset request BEFORE restoring any saved room.
   const params=new URLSearchParams(window.location.search);
 
   if(params.get("reset")==="1"){
    localStorage.removeItem("dg_room");
    params.delete("reset");
-
-   const cleanUrl=
-    window.location.pathname+
+   const cleanUrl=window.location.pathname+
     (params.toString()?"?"+params.toString():"")+
     window.location.hash;
-
-   window.history.replaceState({}, "", cleanUrl);
+   window.history.replaceState({},"",cleanUrl);
   }
 
   await setPersistence(auth,browserLocalPersistence);
@@ -314,6 +316,7 @@ async function initialise(){
 
 async function createRoom(){
  if(!uid){toast("Please wait for Firebase to connect.");return;}
+
  try{
   roomCode=makeCode();
   isHost=true;
@@ -337,8 +340,8 @@ async function createRoom(){
 
 async function joinRoom(){
  if(!uid){toast("Please wait for Firebase to connect.");return;}
- const code=$("roomInput").value.trim().toUpperCase();
 
+ const code=$("roomInput").value.trim().toUpperCase();
  if(code.length!==6){toast("Enter a 6-character room code.");return;}
 
  try{
@@ -356,7 +359,9 @@ async function joinRoom(){
   const name=playerName();
   localStorage.setItem("dg_name",name);
 
-  await set(rpath(`players/${uid}`),{name,joinedAt:Date.now()});
+  await set(rpath(`players/${uid}`),{
+   name,joinedAt:Date.now()
+  });
 
   const scoreSnap=await get(rpath(`scores/${uid}`));
   if(!scoreSnap.exists())await set(rpath(`scores/${uid}`),0);
@@ -370,13 +375,46 @@ async function joinRoom(){
 }
 
 function stopRoomListeners(){
- roomUnsubs.forEach(unsub=>{try{unsub();}catch(error){}});
+ roomUnsubs.forEach(unsub=>{
+  try{unsub();}catch(error){}
+ });
  roomUnsubs=[];
+
+ if(secretUnsub){
+  secretUnsub();
+  secretUnsub=null;
+ }
 
  if(timerInterval){
   clearInterval(timerInterval);
   timerInterval=null;
  }
+}
+
+function manageSecretListener(){
+ const allowed=isHost||isDrawer;
+
+ if(!allowed){
+  if(secretUnsub){
+   secretUnsub();
+   secretUnsub=null;
+  }
+  secretWord="";
+  return;
+ }
+
+ if(secretUnsub)return;
+
+ secretUnsub=onValue(secretRef(),snap=>{
+  secretWord=snap.val()||"";
+  updateGameUI();
+
+  if(isHost&&round.phase==="playing"){
+   processGuesses(latestChatEntries);
+  }
+ },error=>{
+  console.error("Secret word listener:",error);
+ });
 }
 
 function enterGame(){
@@ -393,25 +431,33 @@ function enterGame(){
   updateHostUI();
  }));
 
- roomUnsubs.push(onValue(rpath("chat"),snap=>renderChat(snap.val()||{})));
+ roomUnsubs.push(onValue(rpath("chat"),snap=>{
+  renderChat(snap.val()||{});
+ }));
 
  roomUnsubs.push(onValue(rpath("round"),snap=>{
   round=snap.val()||{};
   isDrawer=round.drawerUid===uid;
   drawingEnabled=isDrawer&&round.phase==="playing";
 
+  manageSecretListener();
   updateGameUI();
+  updateHostUI();
 
-  if(isDrawer&&round.phase==="choosing")showWordChoices();
-  else $("wordChoices").classList.add("hidden");
+  if(isDrawer&&round.phase==="choosing"){
+   showWordChoices();
+  }else{
+   $("wordChoices").classList.add("hidden");
+  }
 
   if(timerInterval)clearInterval(timerInterval);
 
   if(round.phase==="playing"){
    timerInterval=setInterval(()=>{
-    const remaining=Math.max(0,round.endAt-Date.now());
+    const remaining=Math.max(0,(round.endAt||0)-Date.now());
     $("timer").textContent=formatTime(remaining);
-    if(remaining===0&&isDrawer)finishRound();
+
+    if(remaining===0&&isHost)finishRound();
    },250);
   }else{
    $("timer").textContent="--:--";
@@ -434,9 +480,24 @@ function enterGame(){
 function listenToRoom(){
  roomUnsubs.push(onValue(rpath(""),snap=>{
   roomData=snap.val()||{};
+
+  const wasHost=isHost;
   isHost=roomData.ownerUid===uid;
+
+  if(wasHost!==isHost){
+   manageSecretListener();
+   updateHostUI();
+   updateGameUI();
+
+   if(isHost){
+    toast("You are now the host!");
+    if(round.phase==="playing"){
+     processGuesses(latestChatEntries);
+    }
+   }
+  }
+
   renderLeaderboard();
-  updateHostUI();
  }));
 }
 
@@ -459,8 +520,6 @@ async function leaveRoom(){
     });
    }else{
     await set(ref(db,`rooms/${code}`),null);
-    // The room has been deleted. Remove private data separately
-    // only if Firebase rules permit it.
    }
   }
 
@@ -483,6 +542,7 @@ async function leaveRoom(){
   strokes=[];
   liveStroke=null;
   processed.clear();
+  latestChatEntries=[];
 
   $("gameScreen").classList.add("hidden");
   $("lobbyScreen").classList.remove("hidden");
@@ -510,10 +570,8 @@ async function leaveRoom(){
 }
 
 function updateHostUI(){
- $("startRound").classList.toggle(
-  "hidden",
-  !isHost||!(!round.phase||round.phase==="finished")
- );
+ const show=isHost&&(!round.phase||round.phase==="finished");
+ $("startRound").classList.toggle("hidden",!show);
  $("startRound").textContent=
   round.phase==="finished"?"Start next round":"Start first round";
 }
@@ -560,7 +618,17 @@ function renderLeaderboard(){
 
   const name=document.createElement("span");
   name.className="playerName";
-  name.textContent=`${i+1}. ${p.name}${p.id===round.drawerUid?" ✏️":""}`;
+  name.textContent=`${i+1}. ${p.name}`;
+
+  if(p.id===roomData.ownerUid){
+   name.textContent+="  ★ HOST";
+   name.style.color="#684bc2";
+   name.style.fontWeight="800";
+  }
+
+  if(p.id===round.drawerUid){
+   name.textContent+=" ✏️";
+  }
 
   const score=document.createElement("span");
   score.className="playerScore";
@@ -575,6 +643,8 @@ function renderChat(messages){
  const entries=Object.entries(messages).sort(
   (a,b)=>(a[1].time||0)-(b[1].time||0)
  );
+
+ latestChatEntries=entries;
 
  $("chatMessages").innerHTML="";
 
@@ -597,7 +667,9 @@ function renderChat(messages){
 
  $("chatMessages").scrollTop=$("chatMessages").scrollHeight;
 
- if(isDrawer&&round.phase==="playing")processGuesses(entries);
+ if(isHost&&round.phase==="playing"){
+  processGuesses(entries);
+ }
 }
 
 async function sendMessage(text,type="message"){
@@ -615,7 +687,6 @@ $("chatForm").addEventListener("submit",async e=>{
 
  const input=$("chatInput");
  const value=input.value.trim();
-
  if(!value)return;
 
  input.value="";
@@ -631,7 +702,6 @@ async function startRound(){
  if(!isHost)return;
 
  const ids=Object.keys(players);
-
  if(ids.length<2){
   toast("You need at least 2 players.");
   return;
@@ -706,20 +776,19 @@ async function chooseWord(word){
  }
 }
 
-let guessLock=false;
-
+/* HOST-BASED GUESS VALIDATION */
 async function processGuesses(entries){
- if(guessLock||!secretWord)return;
+ if(!isHost||guessLock||!secretWord||round.phase!=="playing")return;
 
  guessLock=true;
 
  try{
   for(const [id,m] of entries){
    if(processed.has(id))continue;
-
    processed.add(id);
 
-   if(m.type!=="message"||m.uid===uid||m.time<(round.startedAt||0))continue;
+   if(m.type!=="message"||m.uid===round.drawerUid||
+      m.time<(round.startedAt||0))continue;
 
    if((m.text||"").trim().toLowerCase()!==secretWord.toLowerCase())continue;
 
@@ -741,17 +810,25 @@ async function processGuesses(entries){
    const count=result.snapshot.val().correctCount;
 
    await addPoints(m.uid,count===1?100:50);
-   await addPoints(uid,50);
+   await addPoints(round.drawerUid,50);
 
    await sendMessage(
     (m.name||"A player")+" guessed correctly!",
     "correct"
    );
 
-   if(count>=Object.keys(players).length-1)await finishRound();
+   const eligibleGuessers=Object.keys(players).filter(
+    playerId=>playerId!==round.drawerUid
+   );
+
+   if(count>=eligibleGuessers.length){
+    await finishRound();
+    break;
+   }
   }
  }catch(error){
-  console.error(error);
+  console.error("Guess validation error:",error);
+  toast("Scoring error: "+error.message);
  }finally{
   guessLock=false;
  }
@@ -765,7 +842,7 @@ async function addPoints(id,points){
 }
 
 async function finishRound(){
- if(!isDrawer||round.phase!=="playing")return;
+ if((!isHost&&!isDrawer)||round.phase!=="playing")return;
 
  try{
   await update(rpath("round"),{
@@ -782,7 +859,6 @@ async function finishRound(){
 
 function formatTime(ms){
  const s=Math.ceil(Math.max(0,ms)/1000);
-
  return String(Math.floor(s/60)).padStart(2,"0")+":"+
   String(s%60).padStart(2,"0");
 }
@@ -796,7 +872,6 @@ function redraw(){
  ctx.fillRect(0,0,canvas.width,canvas.height);
 
  (strokes||[]).forEach(drawStroke);
-
  if(liveStroke)drawStroke(liveStroke);
 }
 
@@ -811,7 +886,6 @@ function drawStroke(s){
  ctx.beginPath();
 
  const first=s.points[0];
-
  ctx.moveTo(first.x*canvas.width,first.y*canvas.height);
 
  if(s.points.length===1){
@@ -856,9 +930,7 @@ canvas.addEventListener("pointermove",e=>{
  if(!drawing||!drawingEnabled)return;
 
  activePoints.push(position(e));
-
  liveStroke={...liveStroke,points:[...activePoints]};
-
  redraw();
 
  clearTimeout(syncTimer);
@@ -887,7 +959,6 @@ async function endDrawing(){
 
  liveStroke=null;
  activePoints=[];
-
  redraw();
  await syncDrawing();
 }
@@ -911,7 +982,6 @@ $("undoBtn").onclick=async()=>{
  strokes.pop();
  liveStroke=null;
  redraw();
-
  await syncDrawing();
 };
 
@@ -921,7 +991,6 @@ $("clearBtn").onclick=async()=>{
  strokes=[];
  liveStroke=null;
  redraw();
-
  await syncDrawing();
 };
 
