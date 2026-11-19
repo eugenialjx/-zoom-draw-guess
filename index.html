@@ -5,275 +5,101 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Draw & Guess</title>
-
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
-
-:root {
-  --purple:#7868e8;
-  --purple-dark:#6252cf;
-  --ink:#28263c;
-  --muted:#9694a8;
-  --bg:#f7f6fb;
-  --line:#eeedf3;
-}
-* {box-sizing:border-box}
-body {
-  margin:0;background:var(--bg);color:var(--ink);
-  font-family:'DM Sans',Arial,sans-serif;
-}
-button,input,select {font:inherit}
-button {cursor:pointer}
-
-/* LOBBY */
-.lobby-screen {
-  position:fixed;inset:0;z-index:1000;
-  background:var(--bg);display:flex;
-  align-items:center;justify-content:center;padding:20px;
-}
-.lobby-card {
-  background:white;border:1px solid var(--line);
-  border-radius:20px;padding:32px;width:100%;
-  max-width:430px;box-shadow:0 12px 40px rgba(40,35,80,.07);
-}
-.lobby-card h1 {font-size:25px;margin:0 0 8px}
-.lobby-card p {font-size:13px;color:var(--muted);line-height:1.6}
-.lobby-card label {
-  display:block;font-size:11px;font-weight:700;
-  color:var(--muted);margin:18px 0 7px;
-}
-.lobby-card input {
-  width:100%;padding:13px;border:1px solid var(--line);
-  border-radius:10px;outline:none;font-size:14px;
-}
-.lobby-card input:focus {border-color:var(--purple)}
-.lobby-btn {
-  width:100%;border:0;background:var(--purple);
-  color:white;padding:13px;border-radius:10px;
-  font-weight:700;margin-top:12px;
-}
-.lobby-btn:hover {background:var(--purple-dark)}
-.lobby-btn:disabled {opacity:.5;cursor:wait}
-.lobby-divider {
-  display:flex;align-items:center;gap:12px;
-  color:#aaa7b8;font-size:11px;margin:22px 0;
-}
-.lobby-divider:before,.lobby-divider:after {
-  content:"";flex:1;height:1px;background:var(--line);
-}
-.lobby-status {
-  font-size:12px;color:var(--purple);
-  margin-top:14px;min-height:18px;overflow-wrap:anywhere;
-}
-
-/* HEADER */
-.topbar {
-  height:72px;background:white;border-bottom:1px solid var(--line);
-  display:flex;align-items:center;justify-content:space-between;padding:0 5%;
-}
-.brand {display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px}
-.logo {
-  width:38px;height:38px;border-radius:12px;
-  background:#eeeaff;display:grid;place-items:center;font-size:21px;
-}
-.brand span {color:var(--purple)}
-.room-info {display:flex;align-items:center;gap:12px}
-.room-tag {
-  background:#f4f2fc;padding:8px 13px;border-radius:9px;
-  font-size:12px;color:#7165c5;font-weight:700;
-}
-.online {font-size:12px;color:#858397}
-.online:before {
-  content:"";display:inline-block;width:7px;height:7px;
-  background:#50c99a;border-radius:50%;margin-right:6px;
-}
-
-/* MAIN GAME */
-main {max-width:1320px;margin:32px auto;padding:0 24px}
-.heading {
-  display:flex;justify-content:space-between;
-  align-items:center;margin-bottom:23px;gap:15px;
-}
-.heading h1 {font-size:25px;margin:0 0 5px;font-weight:800;letter-spacing:-.7px}
-.heading p {font-size:13px;color:var(--muted);margin:0}
-.round {
-  background:white;border:1px solid var(--line);
-  border-radius:14px;padding:11px 16px;
-  display:flex;align-items:center;gap:12px;
-}
-.round small {
-  display:block;color:var(--muted);font-size:10px;
-  font-weight:700;letter-spacing:1px;
-}
-.timer {font-size:24px;font-weight:800;color:var(--purple)}
-.start {
-  border:0;background:var(--purple);color:white;
-  padding:11px 17px;border-radius:10px;font-weight:700;
-}
-.start:hover {background:var(--purple-dark)}
-.word-card {
-  background:#eeeaff;border:1px solid #e6e0ff;
-  border-radius:15px;padding:17px 22px;margin-bottom:18px;
-  display:flex;justify-content:space-between;align-items:center;
-  gap:16px;flex-wrap:wrap;
-}
-.word-label {font-size:10px;color:#8274ce;font-weight:800;letter-spacing:1.2px}
-.word {font-size:19px;font-weight:800;margin-top:4px}
-.word-status {font-size:12px;color:#827caa;margin-top:3px}
-.choices {display:flex;gap:8px;flex-wrap:wrap}
-.choice {
-  background:white;border:1px solid #e5dfff;color:#6558bc;
-  border-radius:9px;padding:9px 14px;font-size:12px;font-weight:700;
-}
-.choice:hover {background:#ded7ff}
-.layout {
-  display:grid;grid-template-columns:minmax(0,1fr) 310px;
-  gap:18px;align-items:start;
-}
-.card {
-  background:white;border:1px solid var(--line);
-  border-radius:17px;padding:18px;
-  box-shadow:0 4px 18px rgba(40,35,80,.025);
-}
-.card-title {
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:15px;
-}
-.card-title strong {font-size:14px;font-weight:800}
-.card-title span {font-size:11px;color:var(--muted)}
-.canvas-wrap {
-  background:white;border:1px solid #eae9f0;
-  border-radius:12px;overflow:hidden;
-}
-canvas {
-  display:block;width:100%;height:430px;
-  background:white;touch-action:none;cursor:crosshair;
-}
-.toolbar {
-  display:flex;align-items:center;gap:10px;
-  flex-wrap:wrap;padding-top:16px;
-}
-.tool-group {
-  display:flex;align-items:center;gap:5px;
-  padding-right:11px;border-right:1px solid var(--line);
-}
-.tool {
-  border:1px solid var(--line);background:white;
-  width:35px;height:35px;border-radius:9px;
-  display:grid;place-items:center;font-size:15px;
-}
-.tool.active,.tool:hover {background:#eeeaff;border-color:#dcd4ff}
-.swatches {display:flex;align-items:center;gap:6px}
-.swatch {
-  width:21px;height:21px;border-radius:50%;
-  border:2px solid white;outline:1px solid #ddd;padding:0;
-}
-.swatch.active {outline:2px solid var(--purple)}
-input[type=color] {width:30px;height:30px;border:0;padding:0;background:none}
-.brush-label {font-size:11px;color:var(--muted)}
-input[type=range] {width:75px;accent-color:var(--purple)}
-.clear {
-  border:0;background:#f6f5fa;color:#77738e;
-  border-radius:9px;padding:9px 12px;font-size:11px;font-weight:700;
-}
-.clear:hover {background:#eeeaff;color:var(--purple)}
-.hint {color:#aaa7b8;font-size:11px;margin:13px 2px 0}
-.sidebar {display:flex;flex-direction:column;gap:16px}
-.chat-box {height:230px;overflow-y:auto;padding:4px 2px}
-.msg {font-size:12px;line-height:1.5;margin:0 0 13px;overflow-wrap:anywhere}
-.msg b {color:#6258b5}
-.system {color:#a09caf;font-style:italic}
-.chat-form {display:flex;gap:7px;margin-top:12px}
-.chat-form input {
-  min-width:0;flex:1;background:#f8f7fb;
-  border:1px solid var(--line);border-radius:9px;
-  padding:11px;font-size:12px;outline:none;
-}
-.chat-form input:focus {border-color:#b7adf4}
-.send {
-  background:var(--purple);color:white;border:0;
-  border-radius:9px;padding:0 14px;font-size:12px;font-weight:700;
-}
-.player {
-  display:flex;align-items:center;justify-content:space-between;
-  padding:11px 0;border-bottom:1px solid #f1f0f5;
-}
-.player:last-child {border-bottom:0}
-.player-left {display:flex;align-items:center;gap:10px}
-.avatar {
-  width:31px;height:31px;border-radius:10px;
-  background:#eeeaff;display:grid;place-items:center;font-size:14px;
-}
-.player-name {font-size:12px;font-weight:700}
-.player-score {font-size:11px;color:var(--purple);font-weight:800}
-.settings {display:grid;gap:12px}
-.settings label {font-size:11px;color:var(--muted);font-weight:700}
-.settings select,.settings input {
-  display:block;width:100%;margin-top:6px;
-  border:1px solid var(--line);border-radius:9px;
-  padding:10px;background:#faf9fc;color:var(--ink);
-  outline:none;font-size:12px;
-}
-.add {
-  border:0;background:#eeeaff;color:#6558c4;
-  border-radius:9px;padding:10px;font-size:12px;font-weight:700;
-}
-.footer {text-align:center;padding:26px 0;color:#b0adbb;font-size:10px}
-
-@media(max-width:850px) {
-  .layout {grid-template-columns:1fr}
-  .sidebar {display:grid;grid-template-columns:1fr 1fr}
-  .sidebar .card:last-child {grid-column:1/-1}
-}
-@media(max-width:560px) {
-  main {padding:0 13px;margin:20px auto}
-  .topbar {padding:0 15px;height:62px}
-  .brand {font-size:16px}
-  .online {display:none}
-  .heading h1 {font-size:21px}
-  .sidebar {display:flex}
-  canvas {height:300px}
-  .round {padding:9px}
-}
+:root{--purple:#7868e8;--purple-dark:#6252cf;--ink:#28263c;--muted:#9694a8;--bg:#f7f6fb;--line:#eeedf3}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'DM Sans',Arial,sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}
+.lobby-screen{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+.lobby-card{background:white;border:1px solid var(--line);border-radius:20px;padding:32px;width:100%;max-width:430px;box-shadow:0 12px 40px rgba(40,35,80,.07)}
+.lobby-card h1{font-size:25px;margin:0 0 8px}.lobby-card p{font-size:13px;color:var(--muted);line-height:1.6}
+.lobby-card label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:18px 0 7px}
+.lobby-card input{width:100%;padding:13px;border:1px solid var(--line);border-radius:10px;outline:none;font-size:14px}
+.lobby-card input:focus{border-color:var(--purple)}
+.lobby-btn{width:100%;border:0;background:var(--purple);color:white;padding:13px;border-radius:10px;font-weight:700;margin-top:12px}
+.lobby-btn:hover{background:var(--purple-dark)}.lobby-btn:disabled{opacity:.5;cursor:wait}
+.lobby-divider{display:flex;align-items:center;gap:12px;color:#aaa7b8;font-size:11px;margin:22px 0}
+.lobby-divider:before,.lobby-divider:after{content:"";flex:1;height:1px;background:var(--line)}
+.lobby-status{font-size:12px;color:var(--purple);margin-top:14px;min-height:18px;overflow-wrap:anywhere}
+.topbar{height:72px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 5%}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px}
+.logo{width:38px;height:38px;border-radius:12px;background:#eeeaff;display:grid;place-items:center;font-size:21px}
+.brand span{color:var(--purple)}.room-info{display:flex;align-items:center;gap:12px}
+.room-tag{background:#f4f2fc;padding:8px 13px;border-radius:9px;font-size:12px;color:#7165c5;font-weight:700}
+.online{font-size:12px;color:#858397}.online:before{content:"";display:inline-block;width:7px;height:7px;background:#50c99a;border-radius:50%;margin-right:6px}
+main{max-width:1320px;margin:32px auto;padding:0 24px}
+.heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:23px;gap:15px}
+.heading h1{font-size:25px;margin:0 0 5px;font-weight:800;letter-spacing:-.7px}.heading p{font-size:13px;color:var(--muted);margin:0}
+.round{background:white;border:1px solid var(--line);border-radius:14px;padding:11px 16px;display:flex;align-items:center;gap:12px}
+.round small{display:block;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px}
+.timer{font-size:24px;font-weight:800;color:var(--purple)}
+.start{border:0;background:var(--purple);color:white;padding:11px 17px;border-radius:10px;font-weight:700}
+.start:hover{background:var(--purple-dark)}
+.word-card{background:#eeeaff;border:1px solid #e6e0ff;border-radius:15px;padding:17px 22px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.word-label{font-size:10px;color:#8274ce;font-weight:800;letter-spacing:1.2px}
+.word{font-size:19px;font-weight:800;margin-top:4px}.word-status{font-size:12px;color:#827caa;margin-top:3px}
+.choices{display:flex;gap:8px;flex-wrap:wrap}
+.choice{background:white;border:1px solid #e5dfff;color:#6558bc;border-radius:9px;padding:9px 14px;font-size:12px;font-weight:700}
+.choice:hover{background:#ded7ff}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}
+.card{background:white;border:1px solid var(--line);border-radius:17px;padding:18px;box-shadow:0 4px 18px rgba(40,35,80,.025)}
+.card-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}
+.card-title strong{font-size:14px;font-weight:800}.card-title span{font-size:11px;color:var(--muted)}
+.canvas-wrap{background:white;border:1px solid #eae9f0;border-radius:12px;overflow:hidden}
+canvas{display:block;width:100%;height:430px;background:white;touch-action:none;cursor:crosshair}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:16px}
+.tool-group{display:flex;align-items:center;gap:5px;padding-right:11px;border-right:1px solid var(--line)}
+.tool{border:1px solid var(--line);background:white;width:35px;height:35px;border-radius:9px;display:grid;place-items:center;font-size:15px}
+.tool.active,.tool:hover{background:#eeeaff;border-color:#dcd4ff}
+.swatches{display:flex;align-items:center;gap:6px}
+.swatch{width:21px;height:21px;border-radius:50%;border:2px solid white;outline:1px solid #ddd;padding:0}
+.swatch.active{outline:2px solid var(--purple)}
+input[type=color]{width:30px;height:30px;border:0;padding:0;background:none}
+.brush-label{font-size:11px;color:var(--muted)}input[type=range]{width:75px;accent-color:var(--purple)}
+.clear{border:0;background:#f6f5fa;color:#77738e;border-radius:9px;padding:9px 12px;font-size:11px;font-weight:700}
+.clear:hover{background:#eeeaff;color:var(--purple)}
+.hint{color:#aaa7b8;font-size:11px;margin:13px 2px 0}
+.sidebar{display:flex;flex-direction:column;gap:16px}
+.chat-box{height:230px;overflow-y:auto;padding:4px 2px}
+.msg{font-size:12px;line-height:1.5;margin:0 0 13px;overflow-wrap:anywhere}
+.msg b{color:#6258b5}.system{color:#a09caf;font-style:italic}
+.chat-form{display:flex;gap:7px;margin-top:12px}
+.chat-form input{min-width:0;flex:1;background:#f8f7fb;border:1px solid var(--line);border-radius:9px;padding:11px;font-size:12px;outline:none}
+.chat-form input:focus{border-color:#b7adf4}
+.send{background:var(--purple);color:white;border:0;border-radius:9px;padding:0 14px;font-size:12px;font-weight:700}
+.player{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f1f0f5}
+.player:last-child{border-bottom:0}.player-left{display:flex;align-items:center;gap:10px}
+.avatar{width:31px;height:31px;border-radius:10px;background:#eeeaff;display:grid;place-items:center;font-size:14px}
+.player-name{font-size:12px;font-weight:700}.player-score{font-size:11px;color:var(--purple);font-weight:800}
+.settings{display:grid;gap:12px}.settings label{font-size:11px;color:var(--muted);font-weight:700}
+.settings select,.settings input{display:block;width:100%;margin-top:6px;border:1px solid var(--line);border-radius:9px;padding:10px;background:#faf9fc;color:var(--ink);outline:none;font-size:12px}
+.add{border:0;background:#eeeaff;color:#6558c4;border-radius:9px;padding:10px;font-size:12px;font-weight:700}
+.footer{text-align:center;padding:26px 0;color:#b0adbb;font-size:10px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:1fr 1fr}.sidebar .card:last-child{grid-column:1/-1}}
+@media(max-width:560px){main{padding:0 13px;margin:20px auto}.topbar{padding:0 15px;height:62px}.brand{font-size:16px}.online{display:none}.heading h1{font-size:21px}.sidebar{display:flex}canvas{height:300px}.round{padding:9px}}
 </style>
 </head>
-
 <body>
 
-<!-- LOBBY -->
 <div id="lobby" class="lobby-screen">
   <div class="lobby-card">
     <div style="font-size:35px;margin-bottom:15px">🎨</div>
     <h1>Ready to play?</h1>
     <p>Enter your name and create a room or join your friends.</p>
-
     <label for="playerName">YOUR DISPLAY NAME</label>
     <input id="playerName" placeholder="e.g. Alex" maxlength="20">
-
-    <button class="lobby-btn" id="createButton" onclick="createRoom()">
-      + Create a room
-    </button>
-
+    <button class="lobby-btn" id="createButton" onclick="createRoom()">+ Create a room</button>
     <div class="lobby-divider">OR JOIN YOUR FRIENDS</div>
-
     <label for="roomCodeInput">ROOM CODE</label>
-    <input id="roomCodeInput" placeholder="Enter 6-character code"
-      maxlength="6" style="text-transform:uppercase">
-
-    <button class="lobby-btn" id="joinButton" onclick="joinRoom()">
-      Join room →
-    </button>
-
+    <input id="roomCodeInput" placeholder="Enter 6-character code" maxlength="6" style="text-transform:uppercase">
+    <button class="lobby-btn" id="joinButton" onclick="joinRoom()">Join room →</button>
     <div id="lobbyStatus" class="lobby-status">Connecting to game server...</div>
   </div>
 </div>
 
-<!-- GAME HEADER -->
 <header class="topbar">
-  <div class="brand">
-    <div class="logo">🎨</div>
-    Draw <span>& Guess</span>
-  </div>
+  <div class="brand"><div class="logo">🎨</div>Draw <span>& Guess</span></div>
   <div class="room-info">
     <span class="online" id="connectionStatus">Connected</span>
     <span class="room-tag" id="roomTag">ROOM · ------</span>
@@ -282,15 +108,9 @@ input[type=range] {width:75px;accent-color:var(--purple)}
 
 <main>
   <section class="heading">
-    <div>
-      <h1>Let's play!</h1>
-      <p>Draw something. Let everyone guess. Have fun.</p>
-    </div>
+    <div><h1>Let's play!</h1><p>Draw something. Let everyone guess. Have fun.</p></div>
     <div class="round">
-      <div>
-        <small>TIME LEFT</small>
-        <div class="timer" id="timer">60s</div>
-      </div>
+      <div><small>TIME LEFT</small><div class="timer" id="timer">60s</div></div>
       <button class="start" onclick="startTimer()">Start round ↗</button>
     </div>
   </section>
@@ -310,13 +130,8 @@ input[type=range] {width:75px;accent-color:var(--purple)}
 
   <div class="layout">
     <section class="card">
-      <div class="card-title">
-        <strong>✏️ Drawing board</strong>
-        <span id="drawerLabel">Drawer: Waiting</span>
-      </div>
-      <div class="canvas-wrap">
-        <canvas id="board" width="900" height="500"></canvas>
-      </div>
+      <div class="card-title"><strong>✏️ Drawing board</strong><span id="drawerLabel">Drawer: Waiting</span></div>
+      <div class="canvas-wrap"><canvas id="board" width="900" height="500"></canvas></div>
       <div class="toolbar">
         <div class="tool-group">
           <button class="tool active" id="pen" onclick="setTool('pen')" title="Pen">✏️</button>
@@ -331,10 +146,7 @@ input[type=range] {width:75px;accent-color:var(--purple)}
           <button class="swatch" style="background:#9b75df" onclick="setColour('#9b75df',this)"></button>
           <input type="color" id="colour" value="#28263c" title="Custom colour">
         </div>
-        <div class="tool-group">
-          <span class="brush-label">Size</span>
-          <input type="range" id="size" min="2" max="30" value="5">
-        </div>
+        <div class="tool-group"><span class="brush-label">Size</span><input type="range" id="size" min="2" max="30" value="5"></div>
         <button class="clear" onclick="undo()">↶ Undo</button>
         <button class="clear" onclick="clearBoard()">Clear all</button>
       </div>
@@ -343,10 +155,7 @@ input[type=range] {width:75px;accent-color:var(--purple)}
 
     <aside class="sidebar">
       <section class="card">
-        <div class="card-title">
-          <strong>💬 Live chat</strong>
-          <span>Guess the word!</span>
-        </div>
+        <div class="card-title"><strong>💬 Live chat</strong><span>Guess the word!</span></div>
         <div class="chat-box" id="chat">
           <p class="msg system">Welcome to Draw & Guess!</p>
           <p class="msg system">Waiting for players...</p>
@@ -358,32 +167,21 @@ input[type=range] {width:75px;accent-color:var(--purple)}
       </section>
 
       <section class="card">
-        <div class="card-title">
-          <strong>🏆 Players</strong>
-          <span id="playerCount">0 players</span>
-        </div>
-        <div id="playerList">
-          <p class="msg system">Players will appear here.</p>
-        </div>
+        <div class="card-title"><strong>🏆 Players</strong><span id="playerCount">0 players</span></div>
+        <div id="playerList"><p class="msg system">Players will appear here.</p></div>
       </section>
 
       <section class="card">
-        <div class="card-title">
-          <strong>⚙️ Game settings</strong>
-        </div>
+        <div class="card-title"><strong>⚙️ Game settings</strong></div>
         <div class="settings">
           <label>ROUND DURATION
             <select id="duration" onchange="resetTimer()">
-              <option value="30">30 seconds</option>
-              <option value="45">45 seconds</option>
-              <option value="60" selected>60 seconds</option>
-              <option value="90">90 seconds</option>
+              <option value="30">30 seconds</option><option value="45">45 seconds</option>
+              <option value="60" selected>60 seconds</option><option value="90">90 seconds</option>
               <option value="120">120 seconds</option>
             </select>
           </label>
-          <label>ADD WORDS TO WORD BANK
-            <input id="newWords" placeholder="e.g. Pizza, Cat, Beach">
-          </label>
+          <label>ADD WORDS TO WORD BANK<input id="newWords" placeholder="e.g. Pizza, Cat, Beach"></label>
           <button class="add" onclick="addWords()">+ Add words</button>
         </div>
       </section>
@@ -392,58 +190,75 @@ input[type=range] {width:75px;accent-color:var(--purple)}
   <div class="footer">DRAW & GUESS · MADE FOR GAME NIGHT ✨</div>
 </main>
 
-<!-- DRAWING GAME SCRIPT -->
 <script>
 const canvas=document.getElementById('board');
 const ctx=canvas.getContext('2d');
-let strokes=[],currentStroke=[],drawing=false;
+let strokes=[],currentStroke=[],remoteLiveStroke=null,drawing=false;
 let colour='#28263c',brushSize=5,tool='pen';
 let currentWord='',seconds=60,interval=null;
 let wordBank=['Pineapple','Airplane','Dinosaur','Ice cream','Guitar','Rainbow'];
+let lastPublish=0;
 
-function position(e) {
+function position(e){
   const r=canvas.getBoundingClientRect();
-  return {
-    x:(e.clientX-r.left)*canvas.width/r.width,
-    y:(e.clientY-r.top)*canvas.height/r.height
-  };
+  return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height};
+}
+function redraw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const all=[...strokes];
+  if(drawing&&currentStroke.length)all.push(currentStroke);
+  else if(remoteLiveStroke&&remoteLiveStroke.length)all.push(remoteLiveStroke);
+  all.forEach(s=>{
+    if(!s||!s.length)return;
+    if(s.length===1){
+      const p=s[0];ctx.fillStyle=p.colour;ctx.beginPath();
+      ctx.arc(p.x,p.y,p.size/2,0,Math.PI*2);ctx.fill();
+    }
+    for(let i=1;i<s.length;i++){
+      const a=s[i-1],b=s[i];ctx.strokeStyle=b.colour;ctx.lineWidth=b.size;
+      ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
+      ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    }
+  });
+}
+function publishDrawing(live=true){
+  if(window.syncDrawing){
+    window.syncDrawing({
+      strokes:strokes,
+      liveStroke:live&&currentStroke.length?currentStroke:null
+    });
+  }
 }
 canvas.addEventListener('pointerdown',e=>{
-  drawing=true;
-  canvas.setPointerCapture(e.pointerId);
+  drawing=true;canvas.setPointerCapture(e.pointerId);
   const p=position(e);
   currentStroke=[{...p,colour:tool==='eraser'?'#ffffff':colour,size:brushSize*(tool==='eraser'?4:1)}];
+  redraw();publishDrawing(true);
 });
 canvas.addEventListener('pointermove',e=>{
   if(!drawing)return;
   const p=position(e);
   currentStroke.push({...p,colour:tool==='eraser'?'#ffffff':colour,size:brushSize*(tool==='eraser'?4:1)});
   redraw();
+  const now=Date.now();
+  if(now-lastPublish>60){lastPublish=now;publishDrawing(true);}
 });
-canvas.addEventListener('pointerup',finish);
-canvas.addEventListener('pointercancel',finish);
 function finish(){
   if(!drawing)return;
   drawing=false;
   if(currentStroke.length)strokes.push(currentStroke);
-  currentStroke=[];
+  currentStroke=[];remoteLiveStroke=null;redraw();publishDrawing(false);
+}
+canvas.addEventListener('pointerup',finish);
+canvas.addEventListener('pointercancel',finish);
+canvas.addEventListener('lostpointercapture',finish);
+
+window.receiveDrawing=function(data){
+  if(!data)return;
+  strokes=Array.isArray(data.strokes)?data.strokes:[];
+  remoteLiveStroke=data.liveStroke||null;
   redraw();
-}
-function redraw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  [...strokes,...(currentStroke.length?[currentStroke]:[])].forEach(s=>{
-    if(s.length===1){
-      const p=s[0];ctx.fillStyle=p.colour;
-      ctx.beginPath();ctx.arc(p.x,p.y,p.size/2,0,Math.PI*2);ctx.fill();
-    }
-    for(let i=1;i<s.length;i++){
-      const a=s[i-1],b=s[i];
-      ctx.strokeStyle=b.colour;ctx.lineWidth=b.size;
-      ctx.lineCap='round';ctx.lineJoin='round';
-      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
-    }
-  });
-}
+};
 function setTool(t){
   tool=t;
   document.getElementById('pen').classList.toggle('active',t==='pen');
@@ -457,323 +272,205 @@ function setColour(c,el){
 }
 document.getElementById('colour').oninput=e=>setColour(e.target.value);
 document.getElementById('size').oninput=e=>brushSize=Number(e.target.value);
-function undo(){strokes.pop();redraw()}
-function clearBoard(){strokes=[];currentStroke=[];redraw()}
 
+function undo(){
+  if(!strokes.length)return;
+  strokes.pop();remoteLiveStroke=null;redraw();publishDrawing(false);
+}
+function clearBoard(){
+  strokes=[];currentStroke=[];remoteLiveStroke=null;redraw();publishDrawing(false);
+}
 function chooseWord(word){
   currentWord=word;
   document.getElementById('word').textContent=word;
   document.getElementById('status').textContent='You are drawing. Let everyone guess!';
   document.getElementById('choices').style.display='none';
-  clearBoard();resetTimer();
-  addMessage('System','A new drawing round has started!');
+  clearBoard();resetTimer();addMessage('System','A new drawing round has started!');
 }
 function startTimer(){
-  if(!currentWord){addMessage('System','Choose a word before starting!');return}
-  clearInterval(interval);
-  seconds=Number(document.getElementById('duration').value);
-  updateTimer();
+  if(!currentWord){addMessage('System','Choose a word before starting!');return;}
+  clearInterval(interval);seconds=Number(document.getElementById('duration').value);updateTimer();
   interval=setInterval(()=>{
     seconds--;updateTimer();
     if(seconds<=0){
-      clearInterval(interval);
-      addMessage('System','Time is up! The word was '+currentWord+'.');
+      clearInterval(interval);addMessage('System','Time is up! The word was '+currentWord+'.');
       document.getElementById('status').textContent='Round ended!';
       document.getElementById('word').textContent=currentWord;
       document.getElementById('choices').style.display='flex';
     }
   },1000);
 }
-function resetTimer(){
-  clearInterval(interval);
-  seconds=Number(document.getElementById('duration').value);
-  updateTimer();
-}
-function updateTimer(){
-  document.getElementById('timer').textContent=seconds+'s';
-}
+function resetTimer(){clearInterval(interval);seconds=Number(document.getElementById('duration').value);updateTimer();}
+function updateTimer(){document.getElementById('timer').textContent=seconds+'s';}
 function addMessage(name,message){
-  const p=document.createElement('p');
-  p.className='msg';
-  const b=document.createElement('b');
-  b.textContent=name+': ';
+  const p=document.createElement('p');p.className='msg';
+  const b=document.createElement('b');b.textContent=name+': ';
   p.append(b,document.createTextNode(message));
-  const chat=document.getElementById('chat');
-  chat.appendChild(p);chat.scrollTop=chat.scrollHeight;
+  const chat=document.getElementById('chat');chat.appendChild(p);chat.scrollTop=chat.scrollHeight;
 }
 function sendGuess(e){
-  e.preventDefault();
-  const input=document.getElementById('guess');
-  const guess=input.value.trim();
+  e.preventDefault();const input=document.getElementById('guess');const guess=input.value.trim();
   if(!guess)return;
   if(currentWord&&guess.toLowerCase()===currentWord.toLowerCase()){
-    addMessage('You','Correct! 🎉');
-    addMessage('System','You guessed the word!');
-  }else{
-    addMessage('You',guess);
-  }
+    addMessage('You','Correct! 🎉');addMessage('System','You guessed the word!');
+  }else addMessage('You',guess);
   input.value='';
 }
 function addWords(){
   const input=document.getElementById('newWords');
   const added=input.value.split(',').map(w=>w.trim()).filter(Boolean);
   if(!added.length)return;
-  wordBank.push(...added);
-  addMessage('System',added.length+' word(s) added to the word bank.');
-  input.value='';
+  wordBank.push(...added);addMessage('System',added.length+' word(s) added to the word bank.');input.value='';
 }
 updateTimer();
 </script>
 
-<!-- FIREBASE MULTIPLAYER -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
-import {
-  getDatabase, ref, get, set, onValue, onDisconnect, runTransaction
-} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-database.js";
-import {
-  getAuth, signInAnonymously
-} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+import{initializeApp}from"https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+import{getDatabase,ref,get,set,onValue,onDisconnect,runTransaction}from"https://www.gstatic.com/firebasejs/13.4.0/firebase-database.js";
+import{getAuth,signInAnonymously}from"https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDmzAJsH2bUXRtO35ictTMkzL2GgkfcfNc",
-  authDomain: "zoom-draw-guess.firebaseapp.com",
-  databaseURL: "https://zoom-draw-guess-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "zoom-draw-guess",
-  storageBucket: "zoom-draw-guess.firebasestorage.app",
-  messagingSenderId: "24892001851",
-  appId: "1:24892001851:web:07d73bb1a50515d134961e"
+const firebaseConfig={
+  apiKey:"AIzaSyDmzAJsH2bUXRtO35ictTMkzL2GgkfcfNc",
+  authDomain:"zoom-draw-guess.firebaseapp.com",
+  databaseURL:"https://zoom-draw-guess-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"zoom-draw-guess",
+  storageBucket:"zoom-draw-guess.firebasestorage.app",
+  messagingSenderId:"24892001851",
+  appId:"1:24892001851:web:07d73bb1a50515d134961e"
 };
+const app=initializeApp(firebaseConfig);
+const database=getDatabase(app);
+const auth=getAuth(app);
+let currentUser=null,currentRoom=null,playerName='',playersListener=null,drawingListener=null;
 
-const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
-const auth = getAuth(app);
-
-let currentUser = null;
-let currentRoom = null;
-let playerName = '';
-let playersListener = null;
-
-const statusBox = document.getElementById('lobbyStatus');
-const createButton = document.getElementById('createButton');
-const joinButton = document.getElementById('joinButton');
-
-function status(message) {
-  statusBox.textContent = message;
-}
-
-function makeRoomCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for(let i=0;i<6;i++) {
-    code += chars[Math.floor(Math.random()*chars.length)];
-  }
+const statusBox=document.getElementById('lobbyStatus');
+const createButton=document.getElementById('createButton');
+const joinButton=document.getElementById('joinButton');
+function status(message){statusBox.textContent=message;}
+function makeRoomCode(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code='';
+  for(let i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];
   return code;
 }
-
-function getPlayerName() {
-  const name = document.getElementById('playerName').value.trim();
-  if(!name) {
-    status('Please enter your display name first.');
-    return null;
-  }
-  if(name.length > 20) {
-    status('Your name must be 20 characters or fewer.');
-    return null;
-  }
+function getPlayerName(){
+  const name=document.getElementById('playerName').value.trim();
+  if(!name){status('Please enter your display name first.');return null;}
+  if(name.length>20){status('Your name must be 20 characters or fewer.');return null;}
   return name;
 }
 
-async function enterRoom(code, name, role) {
-  currentRoom = code;
-  playerName = name;
+/* Send drawing changes to the current room */
+window.syncDrawing=async function(data){
+  if(!currentRoom)return;
+  try{
+    await set(ref(database,`rooms/${currentRoom}/drawing`),{
+      strokes:data.strokes||[],
+      liveStroke:data.liveStroke||null,
+      updatedAt:Date.now()
+    });
+  }catch(error){
+    console.error('Drawing sync error:',error);
+    document.getElementById('connectionStatus').textContent='Sync error';
+  }
+};
 
-  const playerRef = ref(database, `rooms/${code}/players/${currentUser.uid}`);
-
+async function enterRoom(code,name,role){
+  currentRoom=code;playerName=name;
+  const playerRef=ref(database,`rooms/${code}/players/${currentUser.uid}`);
   await onDisconnect(playerRef).remove();
-
-  if(role === 'player') {
-    await set(playerRef, {
-      name:name,
-      role:'player',
-      joinedAt:Date.now()
-    });
+  if(role==='player'){
+    await set(playerRef,{name:name,role:'player',joinedAt:Date.now()});
   }
+  document.getElementById('lobby').style.display='none';
+  document.getElementById('roomTag').textContent='ROOM · '+code;
+  document.getElementById('drawerLabel').textContent='Player: '+name+(role==='host'?' · Host':'');
+  addMessage('System','You joined room '+code+'.');
 
-  document.getElementById('lobby').style.display = 'none';
-  document.getElementById('roomTag').textContent = 'ROOM · ' + code;
-  document.getElementById('drawerLabel').textContent =
-    'Player: ' + name + (role === 'host' ? ' · Host' : '');
+  if(playersListener)playersListener();
+  if(drawingListener)drawingListener();
 
-  addMessage('System','You joined room ' + code + '.');
-  statusBox.textContent = '';
-
-  if(playersListener) playersListener();
-
-  const playersRef = ref(database, `rooms/${code}/players`);
-
-  playersListener = onValue(playersRef, snapshot => {
-    const data = snapshot.val() || {};
-    const list = document.getElementById('playerList');
-    list.innerHTML = '';
-
-    const entries = Object.entries(data);
-    document.getElementById('playerCount').textContent =
-      entries.length + (entries.length === 1 ? ' player' : ' players');
-
-    entries.forEach(([uid,player]) => {
-      const row = document.createElement('div');
-      row.className = 'player';
-
-      const left = document.createElement('div');
-      left.className = 'player-left';
-
-      const avatar = document.createElement('div');
-      avatar.className = 'avatar';
-      avatar.textContent = '👤';
-
-      const name = document.createElement('span');
-      name.className = 'player-name';
-      name.textContent = player.name || 'Player';
-
-      left.append(avatar,name);
-
-      const label = document.createElement('span');
-      label.className = 'player-score';
-      label.textContent = player.role === 'host' ? 'HOST' : 'PLAYER';
-
-      row.append(left,label);
-      list.appendChild(row);
+  playersListener=onValue(ref(database,`rooms/${code}/players`),snapshot=>{
+    const data=snapshot.val()||{},list=document.getElementById('playerList');
+    list.innerHTML='';
+    const entries=Object.entries(data);
+    document.getElementById('playerCount').textContent=entries.length+(entries.length===1?' player':' players');
+    entries.forEach(([uid,player])=>{
+      const row=document.createElement('div');row.className='player';
+      const left=document.createElement('div');left.className='player-left';
+      const avatar=document.createElement('div');avatar.className='avatar';avatar.textContent='👤';
+      const nameEl=document.createElement('span');nameEl.className='player-name';nameEl.textContent=player.name||'Player';
+      left.append(avatar,nameEl);
+      const label=document.createElement('span');label.className='player-score';
+      label.textContent=player.role==='host'?'HOST':'PLAYER';
+      row.append(left,label);list.appendChild(row);
     });
+    if(!entries.length)list.innerHTML='<p class="msg system">Waiting for players...</p>';
+  },error=>addMessage('System','Could not load player list: '+error.message));
 
-    if(entries.length === 0) {
-      list.innerHTML = '<p class="msg system">Waiting for players...</p>';
-    }
-  }, error => {
-    addMessage('System','Could not load player list: ' + error.message);
-  });
+  /* Receive the latest board and all subsequent drawing updates */
+  drawingListener=onValue(ref(database,`rooms/${code}/drawing`),snapshot=>{
+    const data=snapshot.val();
+    if(window.receiveDrawing)window.receiveDrawing(data||{strokes:[],liveStroke:null});
+  },error=>addMessage('System','Could not sync drawing: '+error.message));
+
+  document.getElementById('connectionStatus').textContent='Live';
+  addMessage('System','Live drawing is enabled. Everyone in this room can draw!');
 }
 
-async function createRoom() {
-  const name = getPlayerName();
-  if(!name) return;
-  if(!currentUser) {
-    status('Still connecting. Please wait a moment and try again.');
-    return;
-  }
-
-  createButton.disabled = true;
-  joinButton.disabled = true;
-  status('Creating your room...');
-
-  try {
-    let code = '';
-    let created = false;
-
-    for(let attempt=0;attempt<5;attempt++) {
-      code = makeRoomCode();
-      const roomRef = ref(database, `rooms/${code}`);
-
-      const result = await runTransaction(roomRef, existing => {
-        if(existing !== null) return;
-        return {
-          ownerUid:currentUser.uid,
-          createdAt:Date.now(),
-          players:{
-            [currentUser.uid]:{
-              name:name,
-              role:'host',
-              joinedAt:Date.now()
-            }
-          }
-        };
-      }, {applyLocally:false});
-
-      if(result.committed) {
-        created = true;
-        break;
-      }
+async function createRoom(){
+  const name=getPlayerName();if(!name)return;
+  if(!currentUser){status('Still connecting. Please wait a moment and try again.');return;}
+  createButton.disabled=true;joinButton.disabled=true;status('Creating your room...');
+  try{
+    let code='',created=false;
+    for(let attempt=0;attempt<5;attempt++){
+      code=makeRoomCode();
+      const roomRef=ref(database,`rooms/${code}`);
+      const result=await runTransaction(roomRef,existing=>{
+        if(existing!==null)return;
+        return{ownerUid:currentUser.uid,createdAt:Date.now(),players:{
+          [currentUser.uid]:{name:name,role:'host',joinedAt:Date.now()}
+        }};
+      },{applyLocally:false});
+      if(result.committed){created=true;break;}
     }
-
-    if(!created) throw new Error('Could not generate a room code. Please try again.');
-
+    if(!created)throw new Error('Could not generate a room code. Please try again.');
     await enterRoom(code,name,'host');
-    addMessage('System','You are the host. Share this room code with your friends: ' + code);
-  } catch(error) {
-    console.error(error);
-    status('Could not create room: ' + error.message);
-  } finally {
-    createButton.disabled = false;
-    joinButton.disabled = false;
-  }
+    addMessage('System','You are the host. Share this room code with your friends: '+code);
+  }catch(error){console.error(error);status('Could not create room: '+error.message);}
+  finally{createButton.disabled=false;joinButton.disabled=false;}
 }
 
-async function joinRoom() {
-  const name = getPlayerName();
-  if(!name) return;
-  if(!currentUser) {
-    status('Still connecting. Please wait a moment and try again.');
-    return;
-  }
-
-  const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
-
-  if(!/^[A-Z0-9]{6}$/.test(code)) {
-    status('Please enter a valid 6-character room code.');
-    return;
-  }
-
-  createButton.disabled = true;
-  joinButton.disabled = true;
-  status('Looking for room ' + code + '...');
-
-  try {
-    const roomRef = ref(database, `rooms/${code}`);
-    const snapshot = await get(roomRef);
-
-    if(!snapshot.exists()) {
-      status('Room not found. Check the code and try again.');
-      return;
-    }
-
-    const playerRef = ref(database, `rooms/${code}/players/${currentUser.uid}`);
-
+async function joinRoom(){
+  const name=getPlayerName();if(!name)return;
+  if(!currentUser){status('Still connecting. Please wait a moment and try again.');return;}
+  const code=document.getElementById('roomCodeInput').value.trim().toUpperCase();
+  if(!/^[A-Z0-9]{6}$/.test(code)){status('Please enter a valid 6-character room code.');return;}
+  createButton.disabled=true;joinButton.disabled=true;status('Looking for room '+code+'...');
+  try{
+    const roomRef=ref(database,`rooms/${code}`),snapshot=await get(roomRef);
+    if(!snapshot.exists()){status('Room not found. Check the code and try again.');return;}
+    const playerRef=ref(database,`rooms/${code}/players/${currentUser.uid}`);
     await onDisconnect(playerRef).remove();
-    await set(playerRef,{
-      name:name,
-      role:'player',
-      joinedAt:Date.now()
-    });
-
+    await set(playerRef,{name:name,role:'player',joinedAt:Date.now()});
     await enterRoom(code,name,'player');
-    addMessage('System','Welcome, ' + name + '!');
-  } catch(error) {
-    console.error(error);
-    status('Could not join room: ' + error.message);
-  } finally {
-    createButton.disabled = false;
-    joinButton.disabled = false;
-  }
+    addMessage('System','Welcome, '+name+'!');
+  }catch(error){console.error(error);status('Could not join room: '+error.message);}
+  finally{createButton.disabled=false;joinButton.disabled=false;}
 }
-
-window.createRoom = createRoom;
-window.joinRoom = joinRoom;
-
+window.createRoom=createRoom;
+window.joinRoom=joinRoom;
 document.getElementById('roomCodeInput').addEventListener('input',e=>{
-  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
 });
-
-signInAnonymously(auth)
-  .then(result => {
-    currentUser = result.user;
-    status('Connected! Enter your name to get started.');
-    console.log('Firebase connected successfully!');
-  })
-  .catch(error => {
-    console.error('Firebase authentication error:',error);
-    status('Connection error: ' + error.message);
-  });
+signInAnonymously(auth).then(result=>{
+  currentUser=result.user;status('Connected! Enter your name to get started.');
+  console.log('Firebase connected successfully!');
+}).catch(error=>{
+  console.error('Firebase authentication error:',error);
+  status('Connection error: '+error.message);
+});
 </script>
-
 </body>
 </html>
