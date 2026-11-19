@@ -6,86 +6,560 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Draw & Guess</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f5f2ff;color:#30294a;font-family:'DM Sans',sans-serif}
+
+:root{
+ --bg:#f6f4fb;
+ --surface:#ffffff;
+ --surface-soft:#faf8fe;
+ --text:#302b40;
+ --muted:#928ba2;
+ --border:#eeeaf5;
+ --purple:#8065d8;
+ --purple-dark:#684bc2;
+ --purple-soft:#f0ebfc;
+ --pink:#f8e8f0;
+ --pink-text:#b66d91;
+ --mint:#e6f4ed;
+ --mint-text:#438b6a;
+ --yellow:#fbf2d9;
+ --yellow-text:#a58135;
+ --shadow:0 8px 28px rgba(65,45,100,.055);
+}
+
+*{box-sizing:border-box}
+
+body{
+ margin:0;
+ background:var(--bg);
+ color:var(--text);
+ font-family:'DM Sans',sans-serif;
+ min-height:100vh;
+}
+
 button,input{font:inherit}
-button{border:0;border-radius:11px;padding:11px 15px;font-weight:700;cursor:pointer}
+button{
+ border:0;
+ border-radius:12px;
+ padding:11px 16px;
+ font-weight:700;
+ cursor:pointer;
+ transition:background .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+button:hover:not(:disabled){transform:translateY(-1px)}
+button:active:not(:disabled){transform:translateY(0)}
 button:disabled{opacity:.4;cursor:not-allowed}
-.primary{background:#7957df;color:white}
-.secondary{background:#eee8ff;color:#6546c7}
-.danger{background:#ffe7ec;color:#bd4560}
+
+.primary{
+ background:var(--purple);
+ color:white;
+ box-shadow:0 3px 9px rgba(128,101,216,.16);
+}
+.primary:hover:not(:disabled){background:var(--purple-dark)}
+
+.secondary{
+ background:var(--purple-soft);
+ color:var(--purple-dark);
+}
+.secondary:hover:not(:disabled){background:#e8e0fa}
+
+.danger{
+ background:#f9e9ed;
+ color:#b65c73;
+}
+.danger:hover:not(:disabled){background:#f5dce3}
+
 .hidden{display:none!important}
-.screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.panel{background:white;border:1px solid #ebe5f8;border-radius:22px;padding:28px;box-shadow:0 12px 40px #5d438b12}
-.lobby{width:min(430px,100%)}
-.logo{text-align:center;margin-bottom:25px}
-.logo div{font-size:45px}
-.logo h1{margin:8px 0 3px}
-.logo p,.hint{color:#958ca8;font-size:13px;text-align:center}
-.field{display:flex;flex-direction:column;gap:7px;margin:15px 0}
-.field label{font-size:13px;font-weight:700}
-input{border:1px solid #ddd5f1;border-radius:11px;padding:12px;min-width:0}
+
+.screen{
+ min-height:100vh;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:24px;
+}
+
+.panel{
+ background:var(--surface);
+ border:1px solid var(--border);
+ border-radius:24px;
+ padding:34px;
+ box-shadow:var(--shadow);
+}
+
+.lobby{width:min(440px,100%)}
+
+.logo{
+ text-align:center;
+ margin-bottom:30px;
+}
+
+.logo div{
+ width:72px;
+ height:72px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ margin:0 auto 15px;
+ border-radius:23px;
+ background:var(--purple-soft);
+ font-size:35px;
+}
+
+.logo h1{
+ margin:0;
+ font-size:29px;
+ letter-spacing:-1px;
+ font-weight:800;
+}
+
+.logo p{
+ color:var(--muted);
+ font-size:14px;
+ margin:8px 0 0;
+}
+
+.field{
+ display:flex;
+ flex-direction:column;
+ gap:8px;
+ margin:17px 0;
+}
+
+.field label{
+ font-size:13px;
+ font-weight:700;
+ color:#5b536c;
+}
+
+input{
+ border:1px solid #e7e1f0;
+ border-radius:12px;
+ padding:13px 14px;
+ min-width:0;
+ outline:none;
+ background:#fff;
+ color:var(--text);
+ transition:border .2s,box-shadow .2s;
+}
+
+input:focus{
+ border-color:#aa98e6;
+ box-shadow:0 0 0 3px rgba(128,101,216,.1);
+}
+
 .field input,.full{width:100%}
-.divider{display:flex;align-items:center;gap:12px;color:#aaa1bd;font-size:12px;margin:18px 0}
-.divider:before,.divider:after{content:"";height:1px;background:#eee8f6;flex:1}
-#gameScreen{max-width:1450px;margin:auto;padding:18px}
-.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px}
-.brand{font-size:20px;font-weight:800}
-.roomTag{background:white;border:1px solid #e8e1f5;border-radius:12px;padding:9px 13px;font-size:13px}
-.gameGrid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px}
-.mainPanel,.sidePanel{background:white;border:1px solid #e9e3f4;border-radius:18px;padding:16px;min-width:0}
-.roundInfo{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.status{background:#f0ebff;color:#6748c8;padding:8px 12px;border-radius:20px;font-size:12px;font-weight:800}
-#timer{font-size:20px;font-weight:800}
-#wordNotice{font-size:13px;color:#776d8d;margin:10px 0}
-#wordChoices{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
-#wordChoices button{background:#eee8ff;color:#6546c7}
-#canvasWrap{border:2px solid #eee8f7;border-radius:14px;overflow:hidden;background:white}
-canvas{display:block;width:100%;height:auto;touch-action:none}
-#canvasTools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
-#canvasTools button{padding:9px 12px;font-size:12px}
-#canvasTools input[type=color]{width:38px;height:36px;padding:3px}
-#canvasTools input[type=range]{width:90px}
-.sidePanel{display:flex;flex-direction:column;gap:16px}
-.sidePanel h3{margin:0 0 9px;font-size:15px}
-.playersList{display:flex;flex-direction:column;gap:8px}
-.player{display:flex;justify-content:space-between;background:#faf8ff;border-radius:11px;padding:9px 10px;font-size:13px;gap:8px}
-.playerName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.playerScore{font-weight:800;color:#7455d2}
-.chatBox{border:1px solid #eee8f6;border-radius:12px;height:300px;display:flex;flex-direction:column;overflow:hidden}
-#chatMessages{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
-.message{font-size:12px;line-height:1.4;overflow-wrap:anywhere}
-.message strong{color:#6e50c8}
-.message.system{text-align:center;color:#8b7da8;font-style:italic}
-.message.correct{text-align:center;color:#16885c;font-weight:800}
-.chatForm{display:flex;gap:6px;padding:8px;border-top:1px solid #eee8f6}
-.chatForm input{flex:1;width:0;padding:9px;font-size:12px}
-.chatForm button{padding:9px 12px}
-.smallText{font-size:11px;color:#958ca8;line-height:1.5}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#30294a;color:white;padding:11px 17px;border-radius:12px;font-size:13px;display:none;z-index:10}
-@media(max-width:850px){.gameGrid{grid-template-columns:1fr}.chatBox{height:240px}}
+
+.lobby .full{
+ min-height:47px;
+ font-size:14px;
+}
+
+.divider{
+ display:flex;
+ align-items:center;
+ gap:12px;
+ color:#aaa2b8;
+ font-size:11px;
+ font-weight:700;
+ letter-spacing:1px;
+ margin:22px 0;
+}
+
+.divider:before,.divider:after{
+ content:"";
+ height:1px;
+ background:var(--border);
+ flex:1;
+}
+
+.hint{
+ color:var(--muted);
+ font-size:12px;
+ text-align:center;
+ line-height:1.6;
+ margin:17px 0 0;
+}
+
+#authStatus{margin-top:8px}
+
+#gameScreen{
+ max-width:1500px;
+ margin:auto;
+ padding:24px;
+}
+
+.topbar{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:12px;
+ flex-wrap:wrap;
+ margin-bottom:20px;
+}
+
+.brand{
+ font-size:21px;
+ font-weight:800;
+ letter-spacing:-.6px;
+ display:flex;
+ align-items:center;
+ gap:9px;
+}
+
+.brand:before{
+ content:"🎨";
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ width:37px;
+ height:37px;
+ background:var(--purple-soft);
+ border-radius:12px;
+ font-size:19px;
+}
+
+.roomTag{
+ background:white;
+ border:1px solid var(--border);
+ border-radius:12px;
+ padding:10px 15px;
+ font-size:13px;
+ color:var(--muted);
+}
+
+.roomTag strong{color:var(--purple-dark)}
+
+#copyRoomBtn{
+ font-size:12px;
+ padding:10px 14px;
+}
+
+.gameGrid{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) 310px;
+ gap:18px;
+ align-items:start;
+}
+
+.mainPanel,.sidePanel{
+ background:var(--surface);
+ border:1px solid var(--border);
+ border-radius:20px;
+ padding:20px;
+ min-width:0;
+ box-shadow:var(--shadow);
+}
+
+.roundInfo{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:12px;
+ flex-wrap:wrap;
+ margin-bottom:17px;
+}
+
+.status{
+ display:inline-flex;
+ align-items:center;
+ background:var(--purple-soft);
+ color:var(--purple-dark);
+ padding:8px 13px;
+ border-radius:10px;
+ font-size:12px;
+ font-weight:800;
+}
+
+#timer{
+ font-size:23px;
+ font-weight:800;
+ letter-spacing:.5px;
+ color:var(--text);
+ font-variant-numeric:tabular-nums;
+}
+
+#wordNotice{
+ font-size:13px;
+ color:var(--muted);
+ margin:10px 0 0;
+}
+
+#wordChoices{
+ display:flex;
+ gap:9px;
+ flex-wrap:wrap;
+ margin:15px 0;
+}
+
+#wordChoices button{
+ background:var(--purple-soft);
+ color:var(--purple-dark);
+ border:1px solid #e7defa;
+ padding:11px 17px;
+}
+#wordChoices button:hover{
+ background:#e7dffa;
+}
+
+#canvasWrap{
+ border:1px solid #e9e4f0;
+ border-radius:15px;
+ overflow:hidden;
+ background:white;
+ box-shadow:0 2px 8px rgba(50,40,70,.025);
+}
+
+canvas{
+ display:block;
+ width:100%;
+ height:auto;
+ touch-action:none;
+ cursor:crosshair;
+}
+
+#canvasTools{
+ display:flex;
+ gap:9px;
+ align-items:center;
+ flex-wrap:wrap;
+ margin-top:14px;
+ padding:12px;
+ background:var(--surface-soft);
+ border:1px solid var(--border);
+ border-radius:14px;
+}
+
+#canvasTools button{
+ padding:9px 13px;
+ font-size:12px;
+}
+
+#canvasTools input[type=color]{
+ width:38px;
+ height:36px;
+ padding:3px;
+ border-radius:9px;
+ cursor:pointer;
+}
+
+#canvasTools input[type=range]{
+ width:95px;
+ accent-color:var(--purple);
+}
+
+#canvasTools label{
+ font-size:11px;
+ font-weight:700;
+ color:var(--muted);
+}
+
+#startRound{
+ margin-top:15px;
+ min-height:45px;
+}
+
+.smallText{
+ font-size:11px;
+ color:var(--muted);
+ line-height:1.6;
+}
+
+#drawerHelp{margin:13px 2px 0}
+
+.sidePanel{
+ display:flex;
+ flex-direction:column;
+ gap:22px;
+}
+
+.sidePanel h3{
+ margin:0 0 12px;
+ font-size:14px;
+ font-weight:800;
+ letter-spacing:-.2px;
+}
+
+.playersList{
+ display:flex;
+ flex-direction:column;
+ gap:8px;
+}
+
+.player{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ background:var(--surface-soft);
+ border:1px solid #f0edf5;
+ border-radius:11px;
+ padding:11px 12px;
+ font-size:12px;
+ gap:8px;
+}
+
+.playerName{
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+ color:#554d64;
+}
+
+.playerScore{
+ font-weight:800;
+ color:var(--purple-dark);
+ white-space:nowrap;
+ font-variant-numeric:tabular-nums;
+}
+
+.chatBox{
+ border:1px solid var(--border);
+ border-radius:13px;
+ height:310px;
+ display:flex;
+ flex-direction:column;
+ overflow:hidden;
+ background:#fff;
+}
+
+#chatMessages{
+ flex:1;
+ overflow-y:auto;
+ padding:13px;
+ display:flex;
+ flex-direction:column;
+ gap:10px;
+}
+
+.message{
+ font-size:12px;
+ line-height:1.5;
+ overflow-wrap:anywhere;
+ color:#61596f;
+}
+
+.message strong{color:var(--purple-dark)}
+
+.message.system{
+ text-align:center;
+ color:#9288a6;
+ font-style:italic;
+ font-size:11px;
+ padding:5px 8px;
+ background:#faf8fd;
+ border-radius:8px;
+}
+
+.message.correct{
+ text-align:center;
+ color:var(--mint-text);
+ font-weight:800;
+ background:var(--mint);
+ padding:8px;
+ border-radius:9px;
+}
+
+.chatForm{
+ display:flex;
+ gap:7px;
+ padding:9px;
+ border-top:1px solid var(--border);
+ background:#fcfbfe;
+}
+
+.chatForm input{
+ flex:1;
+ width:0;
+ padding:10px 11px;
+ font-size:12px;
+ border-radius:9px;
+}
+
+.chatForm button{
+ padding:9px 13px;
+ font-size:12px;
+ border-radius:9px;
+}
+
+.sidePanel>.smallText{
+ padding:11px 12px;
+ background:var(--yellow);
+ border-radius:10px;
+ color:#92763e;
+}
+
+#toast{
+ position:fixed;
+ bottom:22px;
+ left:50%;
+ transform:translateX(-50%);
+ background:#332d43;
+ color:white;
+ padding:12px 18px;
+ border-radius:12px;
+ font-size:13px;
+ box-shadow:0 5px 20px rgba(30,20,50,.15);
+ display:none;
+ z-index:10;
+ max-width:calc(100% - 30px);
+ text-align:center;
+}
+
+@media(max-width:900px){
+ .gameGrid{grid-template-columns:1fr}
+ .sidePanel{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  align-items:start;
+ }
+ .sidePanel>.smallText{grid-column:1/-1}
+ .chatBox{height:260px}
+}
+
+@media(max-width:600px){
+ .screen{padding:15px}
+ .panel{padding:25px 21px}
+ #gameScreen{padding:13px}
+ .mainPanel,.sidePanel{padding:14px}
+ .sidePanel{display:flex}
+ .topbar{gap:9px}
+ .brand{font-size:18px}
+ .roomTag{font-size:11px}
+ #canvasTools{gap:7px}
+ #canvasTools input[type=range]{width:70px}
+ .chatBox{height:250px}
+}
 </style>
 </head>
+
 <body>
 
 <div id="lobbyScreen" class="screen">
  <div class="panel lobby">
   <div class="logo">
-   <div>🎨</div><h1>Draw & Guess</h1>
+   <div>🎨</div>
+   <h1>Draw & Guess</h1>
    <p>Your own multiplayer drawing game</p>
   </div>
+
   <div class="field">
    <label>Your display name</label>
    <input id="nameInput" maxlength="20" placeholder="Enter your name">
   </div>
+
   <button id="createBtn" class="primary full">Create a room</button>
+
   <div class="divider">OR JOIN A ROOM</div>
+
   <div class="field">
    <label>Room code</label>
    <input id="roomInput" maxlength="6" placeholder="Enter 6-character code" style="text-transform:uppercase">
   </div>
+
   <button id="joinBtn" class="secondary full">Join room</button>
+
   <p class="hint">Share your room code with everyone in your Zoom meeting.</p>
   <p class="hint" id="authStatus">Connecting...</p>
  </div>
@@ -93,10 +567,11 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
 
 <div id="gameScreen" class="hidden">
  <div class="topbar">
-  <div class="brand">🎨 Draw & Guess</div>
+  <div class="brand">Draw & Guess</div>
   <div class="roomTag">Room: <strong id="roomCodeLabel"></strong> · <span id="playerCount">0</span> players</div>
   <button id="copyRoomBtn" class="secondary">Copy room code</button>
  </div>
+
  <div class="gameGrid">
   <section class="mainPanel">
    <div class="roundInfo">
@@ -106,8 +581,13 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
     </div>
     <div id="timer">--:--</div>
    </div>
+
    <div id="wordChoices" class="hidden"></div>
-   <div id="canvasWrap"><canvas id="drawingCanvas" width="1000" height="560"></canvas></div>
+
+   <div id="canvasWrap">
+    <canvas id="drawingCanvas" width="1000" height="560"></canvas>
+   </div>
+
    <div id="canvasTools">
     <button id="penBtn" class="primary">✏️ Pen</button>
     <button id="eraserBtn" class="secondary">🧽 Eraser</button>
@@ -117,14 +597,17 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
     <button id="undoBtn" class="secondary">Undo</button>
     <button id="clearBtn" class="danger">Clear</button>
    </div>
-   <button id="startRound" class="primary full hidden" style="margin-top:14px">Start game</button>
+
+   <button id="startRound" class="primary full hidden">Start game</button>
    <p class="smallText" id="drawerHelp">Only the selected drawer can draw. Everyone else guesses in chat.</p>
   </section>
+
   <aside class="sidePanel">
    <section>
     <h3>🏆 Leaderboard</h3>
     <div id="playersList" class="playersList"></div>
    </section>
+
    <section>
     <h3>💬 Live chat</h3>
     <div class="chatBox">
@@ -135,10 +618,12 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
      </form>
     </div>
    </section>
+
    <p class="smallText">Correct guesses earn points. The drawer earns points when players guess correctly.</p>
   </aside>
  </div>
 </div>
+
 <div id="toast"></div>
 
 <script type="module">
