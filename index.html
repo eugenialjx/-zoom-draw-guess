@@ -4,303 +4,463 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zoom Draw & Guess</title>
+<title>Draw & Guess</title>
 <style>
-* { box-sizing: border-box; }
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --purple:#7868e8;
+  --purple-dark:#6252cf;
+  --ink:#28263c;
+  --muted:#9694a8;
+  --bg:#f7f6fb;
+  --line:#eeedf3;
+  --white:#fff;
+}
+* {box-sizing:border-box}
 body {
-  margin: 0; font-family: Arial, sans-serif;
-  background: #f3f5fa; color: #202438;
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'DM Sans',Arial,sans-serif;
 }
-header {
-  background: #252a48; color: white; padding: 18px 24px;
-  display: flex; justify-content: space-between; align-items: center;
-}
-header h2 { margin: 0; }
-header span { color: #c9cce0; font-size: 13px; }
-main { max-width: 1150px; margin: 24px auto; padding: 0 16px; }
+button,input,select {font:inherit}
+button {cursor:pointer}
 .topbar {
-  display: flex; justify-content: space-between; align-items: center;
-  flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
+  height:72px;
+  background:#fff;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 5%;
 }
-.panel {
-  background: white; border-radius: 14px; padding: 18px;
-  box-shadow: 0 3px 14px #1820440c;
+.brand {display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px}
+.logo {
+  width:38px;height:38px;border-radius:12px;
+  background:#eeeaff;display:grid;place-items:center;font-size:21px;
 }
-.game {
-  display: grid; grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 16px;
+.brand span {color:var(--purple)}
+.room-info {display:flex;align-items:center;gap:12px}
+.room-tag {
+  background:#f4f2fc;padding:8px 13px;border-radius:9px;
+  font-size:12px;color:#7165c5;font-weight:700;
 }
-.canvas-wrap { position: relative; }
+.online {font-size:12px;color:#858397}
+.online:before {
+  content:"";display:inline-block;width:7px;height:7px;
+  background:#50c99a;border-radius:50%;margin-right:6px;
+}
+main {max-width:1320px;margin:32px auto;padding:0 24px}
+.heading {
+  display:flex;justify-content:space-between;
+  align-items:center;margin-bottom:23px;gap:15px;
+}
+.heading h1 {font-size:25px;margin:0 0 5px;font-weight:800;letter-spacing:-.7px}
+.heading p {font-size:13px;color:var(--muted);margin:0}
+.round {
+  background:white;border:1px solid var(--line);
+  border-radius:14px;padding:11px 16px;
+  display:flex;align-items:center;gap:12px;
+}
+.round small {display:block;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:1px}
+.timer {font-size:24px;font-weight:800;color:var(--purple)}
+.start {
+  border:0;background:var(--purple);color:white;
+  padding:11px 17px;border-radius:10px;font-weight:700;
+}
+.start:hover {background:var(--purple-dark)}
+.word-card {
+  background:#eeeaff;border:1px solid #e6e0ff;
+  border-radius:15px;padding:17px 22px;margin-bottom:18px;
+  display:flex;justify-content:space-between;align-items:center;
+  gap:16px;flex-wrap:wrap;
+}
+.word-label {font-size:10px;color:#8274ce;font-weight:800;letter-spacing:1.2px}
+.word {font-size:19px;font-weight:800;margin-top:4px}
+.word-status {font-size:12px;color:#827caa;margin-top:3px}
+.choices {display:flex;gap:8px;flex-wrap:wrap}
+.choice {
+  background:#fff;border:1px solid #e5dfff;color:#6558bc;
+  border-radius:9px;padding:9px 14px;font-size:12px;font-weight:700;
+}
+.choice:hover {background:#ded7ff}
+.layout {
+  display:grid;grid-template-columns:minmax(0,1fr) 310px;
+  gap:18px;align-items:start;
+}
+.card {
+  background:#fff;border:1px solid var(--line);
+  border-radius:17px;padding:18px;
+  box-shadow:0 4px 18px rgba(40,35,80,.025);
+}
+.card-title {
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:15px;
+}
+.card-title strong {font-size:14px;font-weight:800}
+.card-title span {font-size:11px;color:var(--muted)}
+.canvas-wrap {
+  background:#fff;border:1px solid #eae9f0;
+  border-radius:12px;overflow:hidden;
+}
 canvas {
-  width: 100%; height: 390px; display: block;
-  background: white; border: 2px solid #e4e7f0;
-  border-radius: 10px; touch-action: none; cursor: crosshair;
+  display:block;width:100%;height:430px;
+  background:#fff;touch-action:none;cursor:crosshair;
 }
-.tools {
-  display: flex; flex-wrap: wrap; align-items: center;
-  gap: 9px; margin: 14px 0;
+.toolbar {
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding-top:16px;
 }
-button, input {
-  border: 1px solid #dfe2eb; border-radius: 8px;
-  padding: 10px 13px; font-size: 14px;
+.tool-group {
+  display:flex;align-items:center;gap:5px;
+  padding-right:11px;border-right:1px solid var(--line);
 }
-button { cursor: pointer; background: white; color: #252a48; }
-button:hover { background: #f0f1fa; }
-.primary { background: #6558d9; color: white; border: 0; }
-.primary:hover { background: #5145bd; }
-input[type=color] { width: 42px; height: 38px; padding: 3px; }
-input[type=range] { width: 90px; padding: 0; }
-input[type=text] { width: 100%; }
-.timer { font-size: 25px; font-weight: bold; color: #6558d9; }
-.word { font-size: 20px; font-weight: bold; }
-.side { display: flex; flex-direction: column; gap: 16px; }
-.chat {
-  height: 220px; overflow-y: auto; font-size: 14px;
-  background: #f8f9fc; border-radius: 8px; padding: 10px;
+.tool {
+  border:1px solid var(--line);background:white;
+  width:35px;height:35px;border-radius:9px;
+  display:grid;place-items:center;font-size:15px;
 }
-.message { margin: 0 0 10px; overflow-wrap: anywhere; }
-.chatform { display: flex; gap: 6px; margin-top: 10px; }
-.chatform input { min-width: 0; flex: 1; }
+.tool.active,.tool:hover {background:#eeeaff;border-color:#dcd4ff}
+.swatches {display:flex;align-items:center;gap:6px}
+.swatch {
+  width:21px;height:21px;border-radius:50%;
+  border:2px solid white;outline:1px solid #ddd;
+  padding:0;
+}
+.swatch.active {outline:2px solid var(--purple)}
+input[type=color] {width:30px;height:30px;border:0;padding:0;background:none}
+.brush-label {font-size:11px;color:var(--muted)}
+input[type=range] {width:75px;accent-color:var(--purple)}
+.clear {
+  border:0;background:#f6f5fa;color:#77738e;
+  border-radius:9px;padding:9px 12px;font-size:11px;font-weight:700;
+}
+.clear:hover {background:#eeeaff;color:var(--purple)}
+.hint {
+  color:#aaa7b8;font-size:11px;margin:13px 2px 0;
+}
+.sidebar {display:flex;flex-direction:column;gap:16px}
+.chat-box {height:230px;overflow-y:auto;padding:4px 2px}
+.msg {font-size:12px;line-height:1.5;margin:0 0 13px;overflow-wrap:anywhere}
+.msg b {color:#6258b5}
+.system {color:#a09caf;font-style:italic}
+.chat-form {display:flex;gap:7px;margin-top:12px}
+.chat-form input {
+  min-width:0;flex:1;background:#f8f7fb;
+  border:1px solid var(--line);border-radius:9px;
+  padding:11px;font-size:12px;outline:none;
+}
+.chat-form input:focus {border-color:#b7adf4}
+.send {
+  background:var(--purple);color:white;border:0;
+  border-radius:9px;padding:0 14px;font-size:12px;font-weight:700;
+}
 .player {
-  display: flex; justify-content: space-between;
-  padding: 9px 0; border-bottom: 1px solid #eee;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 0;border-bottom:1px solid #f1f0f5;
 }
-.muted { color: #777d91; font-size: 13px; }
-.choices { display: flex; gap: 8px; flex-wrap: wrap; }
-#wordSettings { margin-top: 18px; }
-@media(max-width: 760px) {
-  .game { grid-template-columns: 1fr; }
-  canvas { height: 300px; }
+.player:last-child {border-bottom:0}
+.player-left {display:flex;align-items:center;gap:10px}
+.avatar {
+  width:31px;height:31px;border-radius:10px;
+  background:#eeeaff;display:grid;place-items:center;font-size:14px;
+}
+.player-name {font-size:12px;font-weight:700}
+.player-score {font-size:11px;color:var(--purple);font-weight:800}
+.settings {display:grid;gap:12px}
+.settings label {font-size:11px;color:var(--muted);font-weight:700}
+.settings select,.settings input {
+  display:block;width:100%;margin-top:6px;
+  border:1px solid var(--line);border-radius:9px;
+  padding:10px;background:#faf9fc;color:var(--ink);
+  outline:none;font-size:12px;
+}
+.add {
+  border:0;background:#eeeaff;color:#6558c4;
+  border-radius:9px;padding:10px;font-size:12px;font-weight:700;
+}
+.footer {
+  text-align:center;padding:26px 0;color:#b0adbb;font-size:10px;
+}
+@media(max-width:850px) {
+  .layout {grid-template-columns:1fr}
+  .sidebar {display:grid;grid-template-columns:1fr 1fr}
+  .sidebar .card:last-child {grid-column:1/-1}
+}
+@media(max-width:560px) {
+  main {padding:0 13px;margin:20px auto}
+  .topbar {padding:0 15px;height:62px}
+  .brand {font-size:16px}
+  .online {display:none}
+  .heading h1 {font-size:21px}
+  .sidebar {display:flex}
+  canvas {height:300px}
+  .round {padding:9px}
 }
 </style>
 </head>
 <body>
-<header>
-  <h2>🎨 Draw & Guess</h2>
-  <span>Zoom Draw & Guess · Prototype</span>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">🎨</div>
+    Draw <span>& Guess</span>
+  </div>
+  <div class="room-info">
+    <span class="online">Prototype</span>
+    <span class="room-tag">ROOM · DEMO-001</span>
+  </div>
 </header>
 
 <main>
-  <div class="topbar">
+  <section class="heading">
     <div>
-      <h2 style="margin:0 0 5px">Game Room</h2>
-      <span class="muted">Room: DEMO-001 · Local test</span>
+      <h1>Let's play!</h1>
+      <p>Draw something. Let everyone guess. Have fun.</p>
     </div>
-    <div class="panel" style="display:flex;gap:18px;align-items:center">
+    <div class="round">
       <div>
-        <div class="muted">TIME LEFT</div>
+        <small>TIME LEFT</small>
         <div class="timer" id="timer">60s</div>
       </div>
-      <button onclick="startTimer()" class="primary">Start round</button>
+      <button class="start" onclick="startTimer()">Start round ↗</button>
     </div>
-  </div>
+  </section>
 
-  <div class="panel" style="margin-bottom:16px">
-    <div class="muted">CURRENT WORD</div>
-    <div class="word" id="word">Waiting for drawer...</div>
-    <p class="muted" id="status">Choose a word to begin your drawing round.</p>
+  <section class="word-card">
+    <div>
+      <div class="word-label">YOUR SECRET WORD</div>
+      <div class="word" id="word">Choose a word first</div>
+      <div class="word-status" id="status">Pick one of the words to begin drawing.</div>
+    </div>
     <div class="choices" id="choices">
-      <button onclick="chooseWord('Pineapple')">Pineapple</button>
-      <button onclick="chooseWord('Airplane')">Airplane</button>
-      <button onclick="chooseWord('Dinosaur')">Dinosaur</button>
+      <button class="choice" onclick="chooseWord('Pineapple')">Pineapple</button>
+      <button class="choice" onclick="chooseWord('Airplane')">Airplane</button>
+      <button class="choice" onclick="chooseWord('Dinosaur')">Dinosaur</button>
     </div>
-  </div>
+  </section>
 
-  <div class="game">
-    <section class="panel">
-      <div class="topbar">
-        <strong>Drawing board</strong>
-        <span class="muted">Drawer: You</span>
+  <div class="layout">
+    <section class="card">
+      <div class="card-title">
+        <strong>✏️ Drawing board</strong>
+        <span>Drawer: You</span>
       </div>
       <div class="canvas-wrap">
         <canvas id="board" width="900" height="500"></canvas>
       </div>
-      <div class="tools">
-        <label>Colour <input type="color" id="colour" value="#252a48"></label>
-        <label>Brush <input type="range" id="size" min="2" max="30" value="5"></label>
-        <button onclick="erase()">Eraser</button>
-        <button onclick="clearBoard()">Clear</button>
-        <button onclick="undo()">Undo</button>
+      <div class="toolbar">
+        <div class="tool-group">
+          <button class="tool active" id="pen" onclick="setTool('pen')" title="Pen">✏️</button>
+          <button class="tool" id="eraser" onclick="setTool('eraser')" title="Eraser">◻️</button>
+        </div>
+        <div class="swatches" id="swatches">
+          <button class="swatch active" style="background:#28263c" onclick="setColour('#28263c',this)"></button>
+          <button class="swatch" style="background:#e65b75" onclick="setColour('#e65b75',this)"></button>
+          <button class="swatch" style="background:#f3a541" onclick="setColour('#f3a541',this)"></button>
+          <button class="swatch" style="background:#52b88a" onclick="setColour('#52b88a',this)"></button>
+          <button class="swatch" style="background:#5794e7" onclick="setColour('#5794e7',this)"></button>
+          <button class="swatch" style="background:#9b75df" onclick="setColour('#9b75df',this)"></button>
+          <input type="color" id="colour" value="#28263c" title="Custom colour">
+        </div>
+        <div class="tool-group">
+          <span class="brush-label">Size</span>
+          <input type="range" id="size" min="2" max="30" value="5">
+        </div>
+        <button class="clear" onclick="undo()">↶ Undo</button>
+        <button class="clear" onclick="clearBoard()">Clear all</button>
       </div>
-      <p class="muted">Draw something that helps other players guess your word!</p>
+      <p class="hint">Tip: Keep your drawings simple. The best clues are sometimes the easiest!</p>
     </section>
 
-    <aside class="side">
-      <section class="panel">
-        <strong>💬 Guesses & Chat</strong>
-        <div class="chat" id="chat">
-          <p class="message"><b>System:</b> Welcome to the room!</p>
-          <p class="message"><b>System:</b> Choose a word to start.</p>
+    <aside class="sidebar">
+      <section class="card">
+        <div class="card-title">
+          <strong>💬 Live chat</strong>
+          <span>Guess the word!</span>
         </div>
-        <form class="chatform" onsubmit="sendGuess(event)">
-          <input id="guess" type="text" placeholder="Type your guess..." autocomplete="off">
-          <button class="primary">Send</button>
+        <div class="chat-box" id="chat">
+          <p class="msg system">Welcome to Draw & Guess!</p>
+          <p class="msg system">Choose a word to start the round.</p>
+        </div>
+        <form class="chat-form" onsubmit="sendGuess(event)">
+          <input id="guess" placeholder="Type your guess..." autocomplete="off">
+          <button class="send">Send</button>
         </form>
       </section>
 
-      <section class="panel">
-        <strong>🏆 Leaderboard</strong>
-        <div id="players">
-          <div class="player"><span>You</span><b>0 pts</b></div>
-          <div class="player"><span>Player 2</span><b>0 pts</b></div>
-          <div class="player"><span>Player 3</span><b>0 pts</b></div>
+      <section class="card">
+        <div class="card-title">
+          <strong>🏆 Leaderboard</strong>
+          <span>Top players</span>
+        </div>
+        <div class="player">
+          <div class="player-left"><div class="avatar">👩🏻</div><span class="player-name">You</span></div>
+          <span class="player-score">0 pts</span>
+        </div>
+        <div class="player">
+          <div class="player-left"><div class="avatar">🧑🏻</div><span class="player-name">Player 2</span></div>
+          <span class="player-score">0 pts</span>
+        </div>
+        <div class="player">
+          <div class="player-left"><div class="avatar">👨🏽</div><span class="player-name">Player 3</span></div>
+          <span class="player-score">0 pts</span>
         </div>
       </section>
 
-      <section class="panel">
-        <strong>⚙️ Round settings</strong>
-        <p class="muted">Round duration</p>
-        <select id="duration" onchange="resetTimer()">
-          <option value="30">30 seconds</option>
-          <option value="45">45 seconds</option>
-          <option value="60" selected>60 seconds</option>
-          <option value="90">90 seconds</option>
-          <option value="120">120 seconds</option>
-        </select>
-        <p class="muted">Custom word bank</p>
-        <input id="newWords" placeholder="Add words separated by commas">
-        <button onclick="addWords()" style="margin-top:8px">Add words</button>
+      <section class="card">
+        <div class="card-title">
+          <strong>⚙️ Game settings</strong>
+        </div>
+        <div class="settings">
+          <label>ROUND DURATION
+            <select id="duration" onchange="resetTimer()">
+              <option value="30">30 seconds</option>
+              <option value="45">45 seconds</option>
+              <option value="60" selected>60 seconds</option>
+              <option value="90">90 seconds</option>
+              <option value="120">120 seconds</option>
+            </select>
+          </label>
+          <label>ADD WORDS TO WORD BANK
+            <input id="newWords" placeholder="e.g. Pizza, Cat, Beach">
+          </label>
+          <button class="add" onclick="addWords()">+ Add words</button>
+        </div>
       </section>
     </aside>
   </div>
+  <div class="footer">DRAW & GUESS · MADE FOR GAME NIGHT ✨</div>
 </main>
 
 <script>
-const canvas = document.getElementById('board');
-const ctx = canvas.getContext('2d');
-let drawing = false;
-let colour = '#252a48';
-let brushSize = 5;
-let currentWord = '';
-let seconds = 60;
-let interval = null;
-let strokes = [];
-let currentStroke = [];
+const canvas=document.getElementById('board');
+const ctx=canvas.getContext('2d');
+let strokes=[],currentStroke=[],drawing=false;
+let colour='#28263c',brushSize=5,tool='pen';
+let currentWord='',seconds=60,interval=null;
+let wordBank=['Pineapple','Airplane','Dinosaur','Ice cream','Guitar','Rainbow'];
 
 function position(e) {
-  const r = canvas.getBoundingClientRect();
+  const r=canvas.getBoundingClientRect();
   return {
-    x: (e.clientX-r.left) * canvas.width/r.width,
-    y: (e.clientY-r.top) * canvas.height/r.height
+    x:(e.clientX-r.left)*canvas.width/r.width,
+    y:(e.clientY-r.top)*canvas.height/r.height
   };
 }
-canvas.addEventListener('pointerdown', e => {
-  drawing = true;
+canvas.addEventListener('pointerdown',e=>{
+  drawing=true;
   canvas.setPointerCapture(e.pointerId);
-  const p = position(e);
-  currentStroke = [{...p, colour, brushSize}];
+  const p=position(e);
+  currentStroke=[{...p,colour:tool==='eraser'?'#ffffff':colour,size:brushSize*(tool==='eraser'?4:1)}];
 });
-canvas.addEventListener('pointermove', e => {
-  if (!drawing) return;
-  const p = position(e);
-  currentStroke.push({...p, colour, brushSize});
+canvas.addEventListener('pointermove',e=>{
+  if(!drawing)return;
+  const p=position(e);
+  currentStroke.push({...p,colour:tool==='eraser'?'#ffffff':colour,size:brushSize*(tool==='eraser'?4:1)});
   redraw();
 });
-canvas.addEventListener('pointerup', finishStroke);
-canvas.addEventListener('pointercancel', finishStroke);
-
-function finishStroke() {
-  if (!drawing) return;
-  drawing = false;
-  if (currentStroke.length) strokes.push(currentStroke);
-  currentStroke = [];
+canvas.addEventListener('pointerup',finish);
+canvas.addEventListener('pointercancel',finish);
+function finish(){
+  if(!drawing)return;
+  drawing=false;
+  if(currentStroke.length)strokes.push(currentStroke);
+  currentStroke=[];
   redraw();
 }
-function redraw() {
+function redraw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  [...strokes, ...(currentStroke.length ? [currentStroke] : [])]
-    .forEach(stroke => {
-      if (stroke.length === 1) {
-        const p = stroke[0];
-        ctx.fillStyle = p.colour;
-        ctx.beginPath();
-        ctx.arc(p.x,p.y,p.brushSize/2,0,Math.PI*2);
-        ctx.fill();
-      }
-      for(let i=1;i<stroke.length;i++) {
-        const a=stroke[i-1], b=stroke[i];
-        ctx.strokeStyle=b.colour;
-        ctx.lineWidth=b.brushSize;
-        ctx.lineCap='round';
-        ctx.lineJoin='round';
-        ctx.beginPath();
-        ctx.moveTo(a.x,a.y);
-        ctx.lineTo(b.x,b.y);
-        ctx.stroke();
-      }
-    });
+  [...strokes,...(currentStroke.length?[currentStroke]:[])].forEach(s=>{
+    if(s.length===1){
+      const p=s[0];ctx.fillStyle=p.colour;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.size/2,0,Math.PI*2);ctx.fill();
+    }
+    for(let i=1;i<s.length;i++){
+      const a=s[i-1],b=s[i];
+      ctx.strokeStyle=b.colour;ctx.lineWidth=b.size;
+      ctx.lineCap='round';ctx.lineJoin='round';
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    }
+  });
 }
-document.getElementById('colour').oninput = e => colour=e.target.value;
-document.getElementById('size').oninput = e => brushSize=Number(e.target.value);
-function erase() { colour='#ffffff'; brushSize=25; }
-function clearBoard() { strokes=[]; currentStroke=[]; redraw(); }
-function undo() { strokes.pop(); redraw(); }
+function setTool(t){
+  tool=t;
+  document.getElementById('pen').classList.toggle('active',t==='pen');
+  document.getElementById('eraser').classList.toggle('active',t==='eraser');
+}
+function setColour(c,el){
+  colour=c;setTool('pen');
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.getElementById('colour').value=c;
+}
+document.getElementById('colour').oninput=e=>setColour(e.target.value);
+document.getElementById('size').oninput=e=>brushSize=Number(e.target.value);
+function undo(){strokes.pop();redraw()}
+function clearBoard(){strokes=[];currentStroke=[];redraw()}
 
-function chooseWord(word) {
+function chooseWord(word){
   currentWord=word;
   document.getElementById('word').textContent=word;
-  document.getElementById('status').textContent='You are drawing. Let the others guess!';
+  document.getElementById('status').textContent='You are drawing. Let everyone guess!';
   document.getElementById('choices').style.display='none';
-  clearBoard();
-  addMessage('System','The drawing round has started!');
+  clearBoard();resetTimer();
+  addMessage('System','A new drawing round has started!');
 }
-function startTimer() {
+function startTimer(){
+  if(!currentWord){addMessage('System','Choose a word before starting!');return}
   clearInterval(interval);
-  if (!currentWord) {
-    addMessage('System','Choose a word before starting the timer.');
-    return;
-  }
   seconds=Number(document.getElementById('duration').value);
   updateTimer();
-  interval=setInterval(() => {
-    seconds--;
-    updateTimer();
-    if(seconds<=0) {
+  interval=setInterval(()=>{
+    seconds--;updateTimer();
+    if(seconds<=0){
       clearInterval(interval);
-      addMessage('System','Time is up!');
-      document.getElementById('status').textContent='Round ended.';
+      addMessage('System','Time is up! The word was '+currentWord+'.');
+      document.getElementById('status').textContent='Round ended!';
+      document.getElementById('word').textContent=currentWord;
+      document.getElementById('choices').style.display='flex';
     }
   },1000);
 }
-function resetTimer() {
+function resetTimer(){
   clearInterval(interval);
   seconds=Number(document.getElementById('duration').value);
   updateTimer();
 }
-function updateTimer() {
+function updateTimer(){
   document.getElementById('timer').textContent=seconds+'s';
 }
-function addMessage(name,message) {
+function addMessage(name,message){
   const p=document.createElement('p');
-  p.className='message';
+  p.className='msg';
   const b=document.createElement('b');
   b.textContent=name+': ';
   p.append(b,document.createTextNode(message));
   const chat=document.getElementById('chat');
-  chat.appendChild(p);
-  chat.scrollTop=chat.scrollHeight;
+  chat.appendChild(p);chat.scrollTop=chat.scrollHeight;
 }
-function sendGuess(e) {
+function sendGuess(e){
   e.preventDefault();
   const input=document.getElementById('guess');
   const guess=input.value.trim();
-  if(!guess) return;
-  if(currentWord && guess.toLowerCase()===currentWord.toLowerCase()) {
+  if(!guess)return;
+  if(currentWord&&guess.toLowerCase()===currentWord.toLowerCase()){
     addMessage('You','Correct! 🎉');
     addMessage('System','You guessed the word!');
-  } else {
+  }else{
     addMessage('You',guess);
   }
   input.value='';
 }
-let wordBank=['Pineapple','Airplane','Dinosaur','Ice cream','Guitar','Rainbow'];
-function addWords() {
+function addWords(){
   const input=document.getElementById('newWords');
-  const added=input.value.split(',')
-    .map(w=>w.trim()).filter(Boolean);
-  if(!added.length) return;
+  const added=input.value.split(',').map(w=>w.trim()).filter(Boolean);
+  if(!added.length)return;
   wordBank.push(...added);
-  addMessage('System',added.length+' word(s) added to this prototype.');
+  addMessage('System',added.length+' word(s) added to the word bank.');
   input.value='';
 }
 updateTimer();
