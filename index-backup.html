@@ -6,73 +6,117 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Draw & Guess</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f5f2ff;color:#30294a;font-family:'DM Sans',sans-serif}
+:root{
+ --bg:#f6f4fb;--surface:#fff;--surface-soft:#faf8fe;
+ --text:#302b40;--muted:#928ba2;--border:#eeeaf5;
+ --purple:#8065d8;--purple-dark:#684bc2;--purple-soft:#f0ebfc;
+ --pink:#f8e8f0;--pink-text:#b66d91;
+ --mint:#e6f4ed;--mint-text:#438b6a;
+ --yellow:#fbf2d9;--yellow-text:#a58135;
+ --shadow:0 8px 28px rgba(65,45,100,.055);
+}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
 button,input{font:inherit}
-button{border:0;border-radius:11px;padding:11px 15px;font-weight:700;cursor:pointer}
+button{border:0;border-radius:12px;padding:11px 16px;font-weight:700;cursor:pointer;transition:background .18s ease,transform .18s ease,box-shadow .18s ease}
+button:hover:not(:disabled){transform:translateY(-1px)}
+button:active:not(:disabled){transform:translateY(0)}
 button:disabled{opacity:.4;cursor:not-allowed}
-.primary{background:#7957df;color:white}
-.secondary{background:#eee8ff;color:#6546c7}
-.danger{background:#ffe7ec;color:#bd4560}
+.primary{background:var(--purple);color:white;box-shadow:0 3px 9px rgba(128,101,216,.16)}
+.primary:hover:not(:disabled){background:var(--purple-dark)}
+.secondary{background:var(--purple-soft);color:var(--purple-dark)}
+.secondary:hover:not(:disabled){background:#e8e0fa}
+.danger{background:#f9e9ed;color:#b65c73}
+.danger:hover:not(:disabled){background:#f5dce3}
 .hidden{display:none!important}
-.screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.panel{background:white;border:1px solid #ebe5f8;border-radius:22px;padding:28px;box-shadow:0 12px 40px #5d438b12}
-.lobby{width:min(430px,100%)}
-.logo{text-align:center;margin-bottom:25px}
-.logo div{font-size:45px}
-.logo h1{margin:8px 0 3px}
-.logo p,.hint{color:#958ca8;font-size:13px;text-align:center}
-.field{display:flex;flex-direction:column;gap:7px;margin:15px 0}
-.field label{font-size:13px;font-weight:700}
-input{border:1px solid #ddd5f1;border-radius:11px;padding:12px;min-width:0}
+.screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:34px;box-shadow:var(--shadow)}
+.lobby{width:min(440px,100%)}
+.logo{text-align:center;margin-bottom:30px}
+.logo div{width:72px;height:72px;display:flex;align-items:center;justify-content:center;margin:0 auto 15px;border-radius:23px;background:var(--purple-soft);font-size:35px}
+.logo h1{margin:0;font-size:29px;letter-spacing:-1px;font-weight:800}
+.logo p{color:var(--muted);font-size:14px;margin:8px 0 0}
+.field{display:flex;flex-direction:column;gap:8px;margin:17px 0}
+.field label{font-size:13px;font-weight:700;color:#5b536c}
+input{border:1px solid #e7e1f0;border-radius:12px;padding:13px 14px;min-width:0;outline:none;background:#fff;color:var(--text);transition:border .2s,box-shadow .2s}
+input:focus{border-color:#aa98e6;box-shadow:0 0 0 3px rgba(128,101,216,.1)}
 .field input,.full{width:100%}
-.divider{display:flex;align-items:center;gap:12px;color:#aaa1bd;font-size:12px;margin:18px 0}
-.divider:before,.divider:after{content:"";height:1px;background:#eee8f6;flex:1}
-#gameScreen{max-width:1450px;margin:auto;padding:18px}
-.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px}
-.brand{font-size:20px;font-weight:800}
-.roomTag{background:white;border:1px solid #e8e1f5;border-radius:12px;padding:9px 13px;font-size:13px}
-.gameGrid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px}
-.mainPanel,.sidePanel{background:white;border:1px solid #e9e3f4;border-radius:18px;padding:16px;min-width:0}
-.roundInfo{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.status{background:#f0ebff;color:#6748c8;padding:8px 12px;border-radius:20px;font-size:12px;font-weight:800}
-#timer{font-size:20px;font-weight:800}
-#wordNotice{font-size:13px;color:#776d8d;margin:10px 0}
-#wordChoices{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
-#wordChoices button{background:#eee8ff;color:#6546c7}
-#canvasWrap{border:2px solid #eee8f7;border-radius:14px;overflow:hidden;background:white}
-canvas{display:block;width:100%;height:auto;touch-action:none}
-#canvasTools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
-#canvasTools button{padding:9px 12px;font-size:12px}
-#canvasTools input[type=color]{width:38px;height:36px;padding:3px}
-#canvasTools input[type=range]{width:90px}
-.sidePanel{display:flex;flex-direction:column;gap:16px}
-.sidePanel h3{margin:0 0 9px;font-size:15px}
+.lobby .full{min-height:47px;font-size:14px}
+.divider{display:flex;align-items:center;gap:12px;color:#aaa2b8;font-size:11px;font-weight:700;letter-spacing:1px;margin:22px 0}
+.divider:before,.divider:after{content:"";height:1px;background:var(--border);flex:1}
+.hint{color:var(--muted);font-size:12px;text-align:center;line-height:1.6;margin:17px 0 0}
+#authStatus{margin-top:8px}
+#gameScreen{max-width:1500px;margin:auto;padding:24px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.brand{font-size:21px;font-weight:800;letter-spacing:-.6px;display:flex;align-items:center;gap:9px}
+.brand:before{content:"🎨";display:inline-flex;align-items:center;justify-content:center;width:37px;height:37px;background:var(--purple-soft);border-radius:12px;font-size:19px}
+.roomTag{background:white;border:1px solid var(--border);border-radius:12px;padding:10px 15px;font-size:13px;color:var(--muted)}
+.roomTag strong{color:var(--purple-dark)}
+#copyRoomBtn,#leaveRoomBtn{font-size:12px;padding:10px 14px}
+.gameGrid{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}
+.mainPanel,.sidePanel{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:20px;min-width:0;box-shadow:var(--shadow)}
+.roundInfo{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:17px}
+.status{display:inline-flex;align-items:center;background:var(--purple-soft);color:var(--purple-dark);padding:8px 13px;border-radius:10px;font-size:12px;font-weight:800}
+#timer{font-size:23px;font-weight:800;letter-spacing:.5px;color:var(--text);font-variant-numeric:tabular-nums}
+#wordNotice{font-size:13px;color:var(--muted);margin:10px 0 0}
+#wordChoices{display:flex;gap:9px;flex-wrap:wrap;margin:15px 0}
+#wordChoices button{background:var(--purple-soft);color:var(--purple-dark);border:1px solid #e7defa;padding:11px 17px}
+#wordChoices button:hover{background:#e7dffa}
+#canvasWrap{border:1px solid #e9e4f0;border-radius:15px;overflow:hidden;background:white;box-shadow:0 2px 8px rgba(50,40,70,.025)}
+canvas{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}
+#canvasTools{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:14px;padding:12px;background:var(--surface-soft);border:1px solid var(--border);border-radius:14px}
+#canvasTools button{padding:9px 13px;font-size:12px}
+#canvasTools input[type=color]{width:38px;height:36px;padding:3px;border-radius:9px;cursor:pointer}
+#canvasTools input[type=range]{width:95px;accent-color:var(--purple)}
+#canvasTools label{font-size:11px;font-weight:700;color:var(--muted)}
+#startRound{margin-top:15px;min-height:45px}
+.smallText{font-size:11px;color:var(--muted);line-height:1.6}
+#drawerHelp{margin:13px 2px 0}
+.sidePanel{display:flex;flex-direction:column;gap:22px}
+.sidePanel h3{margin:0 0 12px;font-size:14px;font-weight:800;letter-spacing:-.2px}
 .playersList{display:flex;flex-direction:column;gap:8px}
-.player{display:flex;justify-content:space-between;background:#faf8ff;border-radius:11px;padding:9px 10px;font-size:13px;gap:8px}
-.playerName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.playerScore{font-weight:800;color:#7455d2}
-.chatBox{border:1px solid #eee8f6;border-radius:12px;height:300px;display:flex;flex-direction:column;overflow:hidden}
-#chatMessages{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
-.message{font-size:12px;line-height:1.4;overflow-wrap:anywhere}
-.message strong{color:#6e50c8}
-.message.system{text-align:center;color:#8b7da8;font-style:italic}
-.message.correct{text-align:center;color:#16885c;font-weight:800}
-.chatForm{display:flex;gap:6px;padding:8px;border-top:1px solid #eee8f6}
-.chatForm input{flex:1;width:0;padding:9px;font-size:12px}
-.chatForm button{padding:9px 12px}
-.smallText{font-size:11px;color:#958ca8;line-height:1.5}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#30294a;color:white;padding:11px 17px;border-radius:12px;font-size:13px;display:none;z-index:10}
-@media(max-width:850px){.gameGrid{grid-template-columns:1fr}.chatBox{height:240px}}
+.player{display:flex;justify-content:space-between;align-items:center;background:var(--surface-soft);border:1px solid #f0edf5;border-radius:11px;padding:11px 12px;font-size:12px;gap:8px}
+.playerName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#554d64}
+.playerScore{font-weight:800;color:var(--purple-dark);white-space:nowrap;font-variant-numeric:tabular-nums}
+.chatBox{border:1px solid var(--border);border-radius:13px;height:310px;display:flex;flex-direction:column;overflow:hidden;background:#fff}
+#chatMessages{flex:1;overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:10px}
+.message{font-size:12px;line-height:1.5;overflow-wrap:anywhere;color:#61596f}
+.message strong{color:var(--purple-dark)}
+.message.system{text-align:center;color:#9288a6;font-style:italic;font-size:11px;padding:5px 8px;background:#faf8fd;border-radius:8px}
+.message.correct{text-align:center;color:var(--mint-text);font-weight:800;background:var(--mint);padding:8px;border-radius:9px}
+.chatForm{display:flex;gap:7px;padding:9px;border-top:1px solid var(--border);background:#fcfbfe}
+.chatForm input{flex:1;width:0;padding:10px 11px;font-size:12px;border-radius:9px}
+.chatForm button{padding:9px 13px;font-size:12px;border-radius:9px}
+.sidePanel>.smallText{padding:11px 12px;background:var(--yellow);border-radius:10px;color:#92763e}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#332d43;color:white;padding:12px 18px;border-radius:12px;font-size:13px;box-shadow:0 5px 20px rgba(30,20,50,.15);display:none;z-index:10;max-width:calc(100% - 30px);text-align:center}
+@media(max-width:900px){
+ .gameGrid{grid-template-columns:1fr}
+ .sidePanel{display:grid;grid-template-columns:1fr 1fr;align-items:start}
+ .sidePanel>.smallText{grid-column:1/-1}
+ .chatBox{height:260px}
+}
+@media(max-width:600px){
+ .screen{padding:15px}.panel{padding:25px 21px}
+ #gameScreen{padding:13px}
+ .mainPanel,.sidePanel{padding:14px}
+ .sidePanel{display:flex}
+ .topbar{gap:9px}.brand{font-size:18px}
+ .roomTag{font-size:11px}
+ #canvasTools{gap:7px}
+ #canvasTools input[type=range]{width:70px}
+ .chatBox{height:250px}
+}
 </style>
 </head>
-<body>
 
+<body>
 <div id="lobbyScreen" class="screen">
  <div class="panel lobby">
   <div class="logo">
-   <div>🎨</div><h1>Draw & Guess</h1>
+   <div>🎨</div>
+   <h1>Draw & Guess</h1>
    <p>Your own multiplayer drawing game</p>
   </div>
   <div class="field">
@@ -93,9 +137,10 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
 
 <div id="gameScreen" class="hidden">
  <div class="topbar">
-  <div class="brand">🎨 Draw & Guess</div>
+  <div class="brand">Draw & Guess</div>
   <div class="roomTag">Room: <strong id="roomCodeLabel"></strong> · <span id="playerCount">0</span> players</div>
   <button id="copyRoomBtn" class="secondary">Copy room code</button>
+  <button id="leaveRoomBtn" class="danger">Leave room</button>
  </div>
  <div class="gameGrid">
   <section class="mainPanel">
@@ -117,7 +162,7 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
     <button id="undoBtn" class="secondary">Undo</button>
     <button id="clearBtn" class="danger">Clear</button>
    </div>
-   <button id="startRound" class="primary full hidden" style="margin-top:14px">Start game</button>
+   <button id="startRound" class="primary full hidden">Start game</button>
    <p class="smallText" id="drawerHelp">Only the selected drawer can draw. Everyone else guesses in chat.</p>
   </section>
   <aside class="sidePanel">
@@ -141,15 +186,15 @@ canvas{display:block;width:100%;height:auto;touch-action:none}
 </div>
 <div id="toast"></div>
 
+
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
 import {
- getAuth, signInAnonymously, onAuthStateChanged,
- setPersistence, browserLocalPersistence
+ getAuth,signInAnonymously,onAuthStateChanged,
+ setPersistence,browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 import {
- getDatabase, ref, set, get, update, push, onValue,
- runTransaction
+ getDatabase,ref,set,get,update,push,onValue,runTransaction
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-database.js";
 
 const firebaseConfig={
@@ -171,7 +216,8 @@ let uid=null,roomCode=null,isHost=false,players={},roomData={};
 let round={},secretWord="",isDrawer=false,drawingEnabled=false;
 let strokes=[],liveStroke=null,drawing=false,activePoints=[];
 let tool="pen",processed=new Set(),timerInterval=null;
-let chatListenerStarted=false;
+let roomUnsubs=[],secretUnsub=null;
+let latestChatEntries=[],guessLock=false;
 
 const wordBank=[
 "elephant","rainbow","pizza","airplane","butterfly","watermelon",
@@ -192,7 +238,8 @@ function toast(message){
 }
 
 function playerName(){
- return $("nameInput").value.trim().slice(0,20)||localStorage.getItem("dg_name")||"Player";
+ return $("nameInput").value.trim().slice(0,20)||
+ localStorage.getItem("dg_name")||"Player";
 }
 
 function makeCode(){
@@ -209,7 +256,10 @@ function waitForAuthentication(){
     resolve(user);
    }else{
     try{await signInAnonymously(auth);}
-    catch(error){if(unsub)unsub();reject(error);}
+    catch(error){
+     if(unsub)unsub();
+     reject(error);
+    }
    }
   });
  });
@@ -217,20 +267,35 @@ function waitForAuthentication(){
 
 async function initialise(){
  try{
+  const params=new URLSearchParams(window.location.search);
+
+  if(params.get("reset")==="1"){
+   localStorage.removeItem("dg_room");
+   params.delete("reset");
+   const cleanUrl=window.location.pathname+
+    (params.toString()?"?"+params.toString():"")+
+    window.location.hash;
+   window.history.replaceState({},"",cleanUrl);
+  }
+
   await setPersistence(auth,browserLocalPersistence);
   await waitForAuthentication();
   $("authStatus").textContent="Connected";
+
   const savedCode=localStorage.getItem("dg_room");
   const savedName=localStorage.getItem("dg_name");
+
   if(savedName)$("nameInput").value=savedName;
 
   if(savedCode){
    roomCode=savedCode;
    const snap=await get(rpath(""));
+
    if(snap.exists()){
     const data=snap.val();
     const isOwner=data.ownerUid===uid;
     const isMember=!!data.players?.[uid];
+
     if(isOwner||isMember){
      isHost=isOwner;
      enterGame();
@@ -238,6 +303,7 @@ async function initialise(){
      return;
     }
    }
+
    localStorage.removeItem("dg_room");
    roomCode=null;
   }
@@ -250,17 +316,20 @@ async function initialise(){
 
 async function createRoom(){
  if(!uid){toast("Please wait for Firebase to connect.");return;}
+
  try{
   roomCode=makeCode();
   isHost=true;
   const name=playerName();
   localStorage.setItem("dg_name",name);
+
   await set(rpath(""),{
    ownerUid:uid,
    createdAt:Date.now(),
    players:{[uid]:{name,joinedAt:Date.now()}},
    scores:{[uid]:0}
   });
+
   localStorage.setItem("dg_room",roomCode);
   enterGame();
  }catch(error){
@@ -271,19 +340,32 @@ async function createRoom(){
 
 async function joinRoom(){
  if(!uid){toast("Please wait for Firebase to connect.");return;}
+
  const code=$("roomInput").value.trim().toUpperCase();
  if(code.length!==6){toast("Enter a 6-character room code.");return;}
+
  try{
   roomCode=code;
   const snap=await get(rpath(""));
-  if(!snap.exists()){roomCode=null;toast("Room not found.");return;}
+
+  if(!snap.exists()){
+   roomCode=null;
+   toast("Room not found.");
+   return;
+  }
+
   const data=snap.val();
   isHost=data.ownerUid===uid;
   const name=playerName();
   localStorage.setItem("dg_name",name);
-  await set(rpath(`players/${uid}`),{name,joinedAt:Date.now()});
+
+  await set(rpath(`players/${uid}`),{
+   name,joinedAt:Date.now()
+  });
+
   const scoreSnap=await get(rpath(`scores/${uid}`));
   if(!scoreSnap.exists())await set(rpath(`scores/${uid}`),0);
+
   localStorage.setItem("dg_room",roomCode);
   enterGame();
  }catch(error){
@@ -292,75 +374,232 @@ async function joinRoom(){
  }
 }
 
+function stopRoomListeners(){
+ roomUnsubs.forEach(unsub=>{
+  try{unsub();}catch(error){}
+ });
+ roomUnsubs=[];
+
+ if(secretUnsub){
+  secretUnsub();
+  secretUnsub=null;
+ }
+
+ if(timerInterval){
+  clearInterval(timerInterval);
+  timerInterval=null;
+ }
+}
+
+function manageSecretListener(){
+ const allowed=isHost||isDrawer;
+
+ if(!allowed){
+  if(secretUnsub){
+   secretUnsub();
+   secretUnsub=null;
+  }
+  secretWord="";
+  return;
+ }
+
+ if(secretUnsub)return;
+
+ secretUnsub=onValue(secretRef(),snap=>{
+  secretWord=snap.val()||"";
+  updateGameUI();
+
+  if(isHost&&round.phase==="playing"){
+   processGuesses(latestChatEntries);
+  }
+ },error=>{
+  console.error("Secret word listener:",error);
+ });
+}
+
 function enterGame(){
+ stopRoomListeners();
+
  $("lobbyScreen").classList.add("hidden");
  $("gameScreen").classList.remove("hidden");
  $("roomCodeLabel").textContent=roomCode;
- listenToRoom();
- onValue(rpath("players"),snap=>{
+
+ roomUnsubs.push(onValue(rpath("players"),snap=>{
   players=snap.val()||{};
   $("playerCount").textContent=Object.keys(players).length;
   renderLeaderboard();
   updateHostUI();
- });
- onValue(rpath("chat"),snap=>renderChat(snap.val()||{}));
- onValue(rpath("round"),snap=>{
+ }));
+
+ roomUnsubs.push(onValue(rpath("chat"),snap=>{
+  renderChat(snap.val()||{});
+ }));
+
+ roomUnsubs.push(onValue(rpath("round"),snap=>{
   round=snap.val()||{};
   isDrawer=round.drawerUid===uid;
   drawingEnabled=isDrawer&&round.phase==="playing";
+
+  manageSecretListener();
   updateGameUI();
-  if(isDrawer&&round.phase==="choosing")showWordChoices();
-  else $("wordChoices").classList.add("hidden");
+  updateHostUI();
+
+  if(isDrawer&&round.phase==="choosing"){
+   showWordChoices();
+  }else{
+   $("wordChoices").classList.add("hidden");
+  }
+
   if(timerInterval)clearInterval(timerInterval);
+
   if(round.phase==="playing"){
    timerInterval=setInterval(()=>{
-    const remaining=Math.max(0,round.endAt-Date.now());
+    const remaining=Math.max(0,(round.endAt||0)-Date.now());
     $("timer").textContent=formatTime(remaining);
-    if(remaining===0&&isDrawer)finishRound();
+
+    if(remaining===0&&isHost)finishRound();
    },250);
-  }else $("timer").textContent="--:--";
- });
- onValue(rpath("drawing"),snap=>{
+  }else{
+   $("timer").textContent="--:--";
+  }
+ }));
+
+ roomUnsubs.push(onValue(rpath("drawing"),snap=>{
   if(drawing)return;
   const data=snap.val()||{};
   strokes=data.strokes||[];
   liveStroke=data.liveStroke||null;
   redraw();
- });
+ }));
+
+ listenToRoom();
  updateHostUI();
  redraw();
 }
 
 function listenToRoom(){
- onValue(rpath(""),snap=>{
+ roomUnsubs.push(onValue(rpath(""),snap=>{
   roomData=snap.val()||{};
+
+  const wasHost=isHost;
   isHost=roomData.ownerUid===uid;
+
+  if(wasHost!==isHost){
+   manageSecretListener();
+   updateHostUI();
+   updateGameUI();
+
+   if(isHost){
+    toast("You are now the host!");
+    if(round.phase==="playing"){
+     processGuesses(latestChatEntries);
+    }
+   }
+  }
+
   renderLeaderboard();
-  updateHostUI();
- });
+ }));
+}
+
+/* LEAVE ROOM */
+async function leaveRoom(){
+ if(!roomCode)return;
+
+ const code=roomCode;
+ const wasHost=isHost;
+ const remainingPlayerIds=Object.keys(players).filter(id=>id!==uid);
+
+ $("leaveRoomBtn").disabled=true;
+ $("leaveRoomBtn").textContent="Leaving...";
+
+ try{
+  if(wasHost){
+   if(remainingPlayerIds.length>0){
+    await update(ref(db,`rooms/${code}`),{
+     ownerUid:remainingPlayerIds[0]
+    });
+   }else{
+    await set(ref(db,`rooms/${code}`),null);
+   }
+  }
+
+  if(!wasHost||remainingPlayerIds.length>0){
+   await set(ref(db,`rooms/${code}/scores/${uid}`),null);
+   await set(ref(db,`rooms/${code}/players/${uid}`),null);
+  }
+
+  stopRoomListeners();
+  localStorage.removeItem("dg_room");
+
+  roomCode=null;
+  isHost=false;
+  isDrawer=false;
+  drawingEnabled=false;
+  players={};
+  roomData={};
+  round={};
+  secretWord="";
+  strokes=[];
+  liveStroke=null;
+  processed.clear();
+  latestChatEntries=[];
+
+  $("gameScreen").classList.add("hidden");
+  $("lobbyScreen").classList.remove("hidden");
+  $("authStatus").textContent="Connected";
+  $("roomInput").value="";
+  $("playerCount").textContent="0";
+  $("playersList").innerHTML="";
+  $("chatMessages").innerHTML="";
+  $("wordChoices").classList.add("hidden");
+  $("timer").textContent="--:--";
+  $("gameStatus").textContent="Waiting for players";
+  $("wordNotice").textContent="The host can start a round.";
+  $("startRound").classList.add("hidden");
+  $("leaveRoomBtn").disabled=false;
+  $("leaveRoomBtn").textContent="Leave room";
+
+  redraw();
+  toast("You have left the room.");
+ }catch(error){
+  console.error("Leave room error:",error);
+  $("leaveRoomBtn").disabled=false;
+  $("leaveRoomBtn").textContent="Leave room";
+  toast("Could not leave room: "+error.message);
+ }
 }
 
 function updateHostUI(){
- $("startRound").classList.toggle("hidden",!isHost||!(!round.phase||round.phase==="finished"));
- $("startRound").textContent=round.phase==="finished"?"Start next round":"Start first round";
+ const show=isHost&&(!round.phase||round.phase==="finished");
+ $("startRound").classList.toggle("hidden",!show);
+ $("startRound").textContent=
+  round.phase==="finished"?"Start next round":"Start first round";
 }
 
 function updateGameUI(){
  $("gameStatus").textContent=
-  round.phase==="choosing"?(isDrawer?"Choose your word!":(players[round.drawerUid]?.name||"Drawer")+" is choosing"):
-  round.phase==="playing"?(isDrawer?"You are drawing!":(players[round.drawerUid]?.name||"Someone")+" is drawing"):
+  round.phase==="choosing"?
+   (isDrawer?"Choose your word!":(players[round.drawerUid]?.name||"Drawer")+" is choosing"):
+  round.phase==="playing"?
+   (isDrawer?"You are drawing!":(players[round.drawerUid]?.name||"Someone")+" is drawing"):
   round.phase==="finished"?"Round finished":"Waiting for host";
 
  $("wordNotice").textContent=
-  round.phase==="choosing"?(isDrawer?"Choose one word below. Keep it secret!":"Get ready to guess!"):
-  round.phase==="playing"?(isDrawer?"Your word: "+(secretWord||"Loading..."):"Type your guess in the live chat!"):
-  round.phase==="finished"?"The word was: "+(round.revealedWord||""):"The host can start a round.";
+  round.phase==="choosing"?
+   (isDrawer?"Choose one word below. Keep it secret!":"Get ready to guess!"):
+  round.phase==="playing"?
+   (isDrawer?"Your word: "+(secretWord||"Loading..."):"Type your guess in the live chat!"):
+  round.phase==="finished"?"The word was: "+(round.revealedWord||""):
+  "The host can start a round.";
 
  $("drawerHelp").textContent=drawingEnabled?
   "You are the drawer. Draw your word for everyone!":
   "Only the selected drawer can draw. Everyone else guesses in chat.";
 
- ["penBtn","eraserBtn","undoBtn","clearBtn","colorPicker","brushSize"].forEach(id=>$(id).disabled=!drawingEnabled);
+ ["penBtn","eraserBtn","undoBtn","clearBtn","colorPicker","brushSize"].forEach(id=>{
+  $(id).disabled=!drawingEnabled;
+ });
+
  $("penBtn").className=tool==="pen"?"primary":"secondary";
  $("eraserBtn").className=tool==="eraser"?"primary":"secondary";
 }
@@ -368,60 +607,106 @@ function updateGameUI(){
 function renderLeaderboard(){
  const scores=roomData.scores||{};
  $("playersList").innerHTML="";
+
  Object.entries(players).map(([id,p])=>({
-  id,name:p.name||"Player",score:Number(scores[id]||0)
+  id,
+  name:p.name||"Player",
+  score:Number(scores[id]||0)
  })).sort((a,b)=>b.score-a.score).forEach((p,i)=>{
   const row=document.createElement("div");
   row.className="player";
+
   const name=document.createElement("span");
   name.className="playerName";
-  name.textContent=`${i+1}. ${p.name}${p.id===round.drawerUid?" ✏️":""}`;
+  name.textContent=`${i+1}. ${p.name}`;
+
+  if(p.id===roomData.ownerUid){
+   name.textContent+="  ★ HOST";
+   name.style.color="#684bc2";
+   name.style.fontWeight="800";
+  }
+
+  if(p.id===round.drawerUid){
+   name.textContent+=" ✏️";
+  }
+
   const score=document.createElement("span");
   score.className="playerScore";
   score.textContent=p.score+" pts";
+
   row.append(name,score);
   $("playersList").append(row);
  });
 }
 
 function renderChat(messages){
- const entries=Object.entries(messages).sort((a,b)=>(a[1].time||0)-(b[1].time||0));
+ const entries=Object.entries(messages).sort(
+  (a,b)=>(a[1].time||0)-(b[1].time||0)
+ );
+
+ latestChatEntries=entries;
+
  $("chatMessages").innerHTML="";
+
  entries.slice(-100).forEach(([id,m])=>{
   const div=document.createElement("div");
-  div.className="message"+(m.type==="system"?" system":"")+(m.type==="correct"?" correct":"");
-  if(m.type==="system"||m.type==="correct")div.textContent=m.text||"";
-  else{
+  div.className="message"+
+   (m.type==="system"?" system":"")+
+   (m.type==="correct"?" correct":"");
+
+  if(m.type==="system"||m.type==="correct"){
+   div.textContent=m.text||"";
+  }else{
    const strong=document.createElement("strong");
    strong.textContent=(m.name||"Player")+": ";
    div.append(strong,document.createTextNode(m.text||""));
   }
+
   $("chatMessages").append(div);
  });
+
  $("chatMessages").scrollTop=$("chatMessages").scrollHeight;
- if(isDrawer&&round.phase==="playing")processGuesses(entries);
+
+ if(isHost&&round.phase==="playing"){
+  processGuesses(entries);
+ }
 }
 
 async function sendMessage(text,type="message"){
  await push(rpath("chat"),{
-  uid,name:players[uid]?.name||playerName(),text,type,time:Date.now()
+  uid,
+  name:players[uid]?.name||playerName(),
+  text,
+  type,
+  time:Date.now()
  });
 }
 
 $("chatForm").addEventListener("submit",async e=>{
  e.preventDefault();
+
  const input=$("chatInput");
  const value=input.value.trim();
  if(!value)return;
+
  input.value="";
- try{await sendMessage(value);}
- catch(error){toast("Message failed: "+error.message);}
+
+ try{
+  await sendMessage(value);
+ }catch(error){
+  toast("Message failed: "+error.message);
+ }
 });
 
 async function startRound(){
  if(!isHost)return;
+
  const ids=Object.keys(players);
- if(ids.length<2){toast("You need at least 2 players.");return;}
+ if(ids.length<2){
+  toast("You need at least 2 players.");
+  return;
+ }
+
  const previous=Number(round.turnIndex??-1);
  const next=(previous+1)%ids.length;
  const drawerUid=ids[next];
@@ -434,6 +719,7 @@ async function startRound(){
  try{
   await set(rpath("drawing"),{strokes:[],liveStroke:null});
   await set(secretRef(),null);
+
   await set(rpath("round"),{
    number:Number(round.number||0)+1,
    turnIndex:next,
@@ -444,15 +730,23 @@ async function startRound(){
    correctCount:0,
    solvedBy:{}
   });
-  await sendMessage((players[drawerUid]?.name||"A player")+" is drawing now!","system");
- }catch(error){toast("Could not start round: "+error.message);}
+
+  await sendMessage(
+   (players[drawerUid]?.name||"A player")+" is drawing now!",
+   "system"
+  );
+ }catch(error){
+  toast("Could not start round: "+error.message);
+ }
 }
 
 function showWordChoices(){
  const box=$("wordChoices");
  box.innerHTML="";
  box.classList.remove("hidden");
+
  const options=[...wordBank].sort(()=>Math.random()-.5).slice(0,3);
+
  options.forEach(word=>{
   const btn=document.createElement("button");
   btn.textContent=word;
@@ -463,9 +757,11 @@ function showWordChoices(){
 
 async function chooseWord(word){
  if(!isDrawer||round.phase!=="choosing")return;
+
  try{
   secretWord=word;
   await set(secretRef(),word);
+
   await update(rpath("round"),{
    phase:"playing",
    startedAt:Date.now(),
@@ -473,61 +769,98 @@ async function chooseWord(word){
    correctCount:0,
    solvedBy:{}
   });
+
   await sendMessage("The round has started! Start guessing.","system");
- }catch(error){toast("Word selection failed: "+error.message);}
+ }catch(error){
+  toast("Word selection failed: "+error.message);
+ }
 }
 
-let guessLock=false;
+/* HOST-BASED GUESS VALIDATION */
 async function processGuesses(entries){
- if(guessLock||!secretWord)return;
+ if(!isHost||guessLock||!secretWord||round.phase!=="playing")return;
+
  guessLock=true;
+
  try{
   for(const [id,m] of entries){
    if(processed.has(id))continue;
    processed.add(id);
-   if(m.type!=="message"||m.uid===uid||m.time<(round.startedAt||0))continue;
+
+   if(m.type!=="message"||m.uid===round.drawerUid||
+      m.time<(round.startedAt||0))continue;
+
    if((m.text||"").trim().toLowerCase()!==secretWord.toLowerCase())continue;
 
    const result=await runTransaction(rpath("round"),r=>{
     if(!r||r.phase!=="playing")return;
+
     r.solvedBy=r.solvedBy||{};
+
     if(r.solvedBy[m.uid])return;
+
     r.solvedBy[m.uid]=true;
     r.correctCount=Number(r.correctCount||0)+1;
+
     return r;
    });
+
    if(!result.committed)continue;
 
    const count=result.snapshot.val().correctCount;
-   await addPoints(m.uid,count===1?100:50);
-   await addPoints(uid,50);
-   await sendMessage((m.name||"A player")+" guessed correctly!","correct");
 
-   if(count>=Object.keys(players).length-1)await finishRound();
+   await addPoints(m.uid,count===1?100:50);
+   await addPoints(round.drawerUid,50);
+
+   await sendMessage(
+    (m.name||"A player")+" guessed correctly!",
+    "correct"
+   );
+
+   const eligibleGuessers=Object.keys(players).filter(
+    playerId=>playerId!==round.drawerUid
+   );
+
+   if(count>=eligibleGuessers.length){
+    await finishRound();
+    break;
+   }
   }
- }catch(error){console.error(error);}
- finally{guessLock=false;}
+ }catch(error){
+  console.error("Guess validation error:",error);
+  toast("Scoring error: "+error.message);
+ }finally{
+  guessLock=false;
+ }
 }
 
 async function addPoints(id,points){
- await runTransaction(rpath("scores/"+id),value=>Number(value||0)+points);
+ await runTransaction(
+  rpath("scores/"+id),
+  value=>Number(value||0)+points
+ );
 }
 
 async function finishRound(){
- if(!isDrawer||round.phase!=="playing")return;
+ if((!isHost&&!isDrawer)||round.phase!=="playing")return;
+
  try{
   await update(rpath("round"),{
    phase:"finished",
    revealedWord:secretWord,
    endAt:Date.now()
   });
+
   await sendMessage("Round over! The word was "+secretWord+".","system");
- }catch(error){console.error(error);}
+ }catch(error){
+  console.error(error);
+ }
 }
 
 function formatTime(ms){
  const s=Math.ceil(Math.max(0,ms)/1000);
- return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+ return String(Math.floor(s/60)).padStart(2,"0")+":"+
+  String(s%60).padStart(2,"0");
 }
 
 const canvas=$("drawingCanvas");
@@ -537,28 +870,37 @@ function redraw(){
  ctx.clearRect(0,0,canvas.width,canvas.height);
  ctx.fillStyle="#fff";
  ctx.fillRect(0,0,canvas.width,canvas.height);
+
  (strokes||[]).forEach(drawStroke);
  if(liveStroke)drawStroke(liveStroke);
 }
 
 function drawStroke(s){
  if(!s?.points?.length)return;
+
  ctx.save();
  ctx.lineCap="round";
  ctx.lineJoin="round";
  ctx.lineWidth=s.size||5;
  ctx.strokeStyle=s.tool==="eraser"?"#fff":(s.color||"#30294a");
  ctx.beginPath();
+
  const first=s.points[0];
  ctx.moveTo(first.x*canvas.width,first.y*canvas.height);
- if(s.points.length===1)ctx.lineTo(first.x*canvas.width+.1,first.y*canvas.height+.1);
- else s.points.forEach(p=>ctx.lineTo(p.x*canvas.width,p.y*canvas.height));
+
+ if(s.points.length===1){
+  ctx.lineTo(first.x*canvas.width+.1,first.y*canvas.height+.1);
+ }else{
+  s.points.forEach(p=>ctx.lineTo(p.x*canvas.width,p.y*canvas.height));
+ }
+
  ctx.stroke();
  ctx.restore();
 }
 
 function position(e){
  const rect=canvas.getBoundingClientRect();
+
  return {
   x:Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width)),
   y:Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height))
@@ -567,69 +909,103 @@ function position(e){
 
 canvas.addEventListener("pointerdown",e=>{
  if(!drawingEnabled)return;
+
  drawing=true;
  canvas.setPointerCapture(e.pointerId);
  activePoints=[position(e)];
+
  liveStroke={
   points:[...activePoints],
   color:$("colorPicker").value,
   size:Number($("brushSize").value),
   tool
  };
+
  redraw();
 });
 
 let syncTimer=null;
+
 canvas.addEventListener("pointermove",e=>{
  if(!drawing||!drawingEnabled)return;
+
  activePoints.push(position(e));
  liveStroke={...liveStroke,points:[...activePoints]};
  redraw();
+
  clearTimeout(syncTimer);
  syncTimer=setTimeout(syncDrawing,70);
 });
 
 async function syncDrawing(){
  if(!isDrawer||!drawingEnabled)return;
+
  try{
   await set(rpath("drawing"),{strokes,liveStroke});
- }catch(error){console.error("Drawing sync:",error);}
+ }catch(error){
+  console.error("Drawing sync:",error);
+ }
 }
 
 async function endDrawing(){
  if(!drawing)return;
+
  drawing=false;
  clearTimeout(syncTimer);
- if(liveStroke)strokes.push({...liveStroke,points:[...activePoints]});
+
+ if(liveStroke){
+  strokes.push({...liveStroke,points:[...activePoints]});
+ }
+
  liveStroke=null;
  activePoints=[];
  redraw();
  await syncDrawing();
 }
+
 canvas.addEventListener("pointerup",endDrawing);
 canvas.addEventListener("pointercancel",endDrawing);
 
-$("penBtn").onclick=()=>{tool="pen";updateGameUI();};
-$("eraserBtn").onclick=()=>{tool="eraser";updateGameUI();};
+$("penBtn").onclick=()=>{
+ tool="pen";
+ updateGameUI();
+};
+
+$("eraserBtn").onclick=()=>{
+ tool="eraser";
+ updateGameUI();
+};
 
 $("undoBtn").onclick=async()=>{
  if(!drawingEnabled||!strokes.length)return;
- strokes.pop();liveStroke=null;redraw();
+
+ strokes.pop();
+ liveStroke=null;
+ redraw();
  await syncDrawing();
 };
+
 $("clearBtn").onclick=async()=>{
  if(!drawingEnabled)return;
- strokes=[];liveStroke=null;redraw();
+
+ strokes=[];
+ liveStroke=null;
+ redraw();
  await syncDrawing();
 };
 
 $("createBtn").onclick=createRoom;
 $("joinBtn").onclick=joinRoom;
 $("startRound").onclick=startRound;
+$("leaveRoomBtn").onclick=leaveRoom;
 
 $("copyRoomBtn").onclick=async()=>{
- try{await navigator.clipboard.writeText(roomCode);toast("Room code copied!");}
- catch{toast("Room code: "+roomCode);}
+ try{
+  await navigator.clipboard.writeText(roomCode);
+  toast("Room code copied!");
+ }catch{
+  toast("Room code: "+roomCode);
+ }
 };
 
 initialise();
